@@ -56,7 +56,7 @@ onMounted(() => {
         container: documentContainer.value,
 
         // 2. What document to show
-        document: 'https://storage.googleapis.com/public_statichosting/word_documents/sample.docx',
+        document: 'https://storage.googleapis.com/public_statichosting/word_documents/service_agreement.docx',
 
         // 3. Define requirements
         requirements: {
