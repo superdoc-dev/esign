@@ -96,20 +96,9 @@ export default class SuperDocEsign {
     try {
       const { SuperDoc } = await import("superdoc");
 
-      // NOTE: Temp Workaround - Fixed on PR #13
-      const selector = typeof this.config.container === 'string'
-        ? this.config.container
-        : (() => {
-          if (!this.config.container.id) {
-            this.config.container.id = `esign-${Date.now()}`;
-          }
-          return `#${this.config.container.id}`;
-        })();
-
       this.superdoc = new SuperDoc({
-        selector,
+        selector: this.config.container,
         document: this.config.document,
-        documents: [], // NOTE: Temp Workaround Fixed on PR #13
         documentMode: "viewing",
         onReady: () => this.onSuperDocReady(),
         onException: ({ error }: { error: Error }) => this.config.onError?.(error)

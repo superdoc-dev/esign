@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       superdoc:
-        specifier: '>=0.21.0'
-        version: 0.21.0(@hocuspocus/provider@2.15.3(y-protocols@1.0.6(yjs@13.6.19))(yjs@13.6.19))(canvas@2.11.2)(pdfjs-dist@4.6.82)(typescript@5.9.2)(y-prosemirror@1.3.7(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.1)(y-protocols@1.0.6(yjs@13.6.19))(yjs@13.6.19))(yjs@13.6.19)
+        specifier: '>=0.22.0'
+        version: 0.22.0-next.3(@hocuspocus/provider@2.15.3(y-protocols@1.0.6(yjs@13.6.19))(yjs@13.6.19))(canvas@2.11.2)(pdfjs-dist@4.6.82)(typescript@5.9.2)(y-prosemirror@1.3.7(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.1)(y-protocols@1.0.6(yjs@13.6.19))(yjs@13.6.19))(yjs@13.6.19)
     devDependencies:
       '@eslint/js':
         specifier: ^9.36.0
@@ -2394,8 +2394,8 @@ packages:
     resolution: {integrity: sha512-CY8u7DtbvucKuquCmOFEKhr9Besln7n9uN8eFbwcoGYWXOMW07u2o8njWaiXt11ylS3qoGF55pILjRmPlbodyg==}
     engines: {node: '>=18'}
 
-  superdoc@0.21.0:
-    resolution: {integrity: sha512-PuKCPIrVauL5e6H0ZTMClHxvCLfR0P+shGqZsXnasPa0F/bZ+EVuTuWQdBr7o6cFHsovg2qA+grszYgAO+f2vw==}
+  superdoc@0.22.0-next.3:
+    resolution: {integrity: sha512-sDQjVsIq6ifn+RoawlPJggdA5P1tbpjcim6cfZunWh32dp44sQIlvIsbm+TSSzqHdECvkMAYcFGsXJNvlbB9Jw==}
     peerDependencies:
       '@hocuspocus/provider': ^2.13.6
       pdfjs-dist: '>=4.3.136 <=4.6.82'
@@ -5182,7 +5182,7 @@ snapshots:
       function-timeout: 1.0.2
       time-span: 5.1.0
 
-  superdoc@0.21.0(@hocuspocus/provider@2.15.3(y-protocols@1.0.6(yjs@13.6.19))(yjs@13.6.19))(canvas@2.11.2)(pdfjs-dist@4.6.82)(typescript@5.9.2)(y-prosemirror@1.3.7(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.1)(y-protocols@1.0.6(yjs@13.6.19))(yjs@13.6.19))(yjs@13.6.19):
+  superdoc@0.22.0-next.3(@hocuspocus/provider@2.15.3(y-protocols@1.0.6(yjs@13.6.19))(yjs@13.6.19))(canvas@2.11.2)(pdfjs-dist@4.6.82)(typescript@5.9.2)(y-prosemirror@1.3.7(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.1)(y-protocols@1.0.6(yjs@13.6.19))(yjs@13.6.19))(yjs@13.6.19):
     dependencies:
       '@hocuspocus/provider': 2.15.3(y-protocols@1.0.6(yjs@13.6.19))(yjs@13.6.19)
       buffer-crc32: 1.0.0
