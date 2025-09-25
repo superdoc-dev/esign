@@ -1,11 +1,9 @@
 {
-    "name": "esign-react-example",
+    "name": "superdoc-esign-react",
     "private": true,
-    "version": "0.0.0",
-    "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "tsc && vite build"
+        "build": "vite build"
     },
     "dependencies": {
         "@superdoc-dev/esign": "link:../..",
@@ -16,7 +14,9 @@
         "@types/react": "^19.1.13",
         "@types/react-dom": "^19.1.9",
         "@vitejs/plugin-react": "^5.0.3",
-        "typescript": "^5.9.2",
         "vite": "^7.1.7"
+    },
+    "engines": {
+        "node": ">=20"
     }
 }

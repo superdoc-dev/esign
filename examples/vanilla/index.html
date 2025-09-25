@@ -6,413 +6,175 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SuperDoc eSign - Vanilla JS Example</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #f3f4f6;
-      padding: 2rem;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-    }
-
-    h1 {
-      margin-bottom: 1rem;
-      color: #1a1a1a;
+    .document-viewer {
+      height: 400px;
+      border: 1px solid #ccc;
+      margin: 20px 0;
     }
 
     .status {
-      padding: 0.75rem 1rem;
-      margin-bottom: 1.5rem;
-      border-radius: 6px;
-      background: #f9fafb;
-      color: #6b7280;
-      font-size: 0.875rem;
-    }
-
-    .status.ready {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    .status.accepted {
-      background: #d1fae5;
-      color: #065f46;
-    }
-
-    #document-viewer {
-      border: 2px solid #e5e7eb;
-      border-radius: 8px;
-      height: 400px;
-      margin-bottom: 2rem;
-      overflow: auto;
-      padding: 2rem;
-      background: #fafafa;
-    }
-
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-      color: #374151;
-      font-size: 0.875rem;
-      text-transform: uppercase;
-      letter-spacing: 0.025em;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 0.75rem 0;
-      font-size: 1.5rem;
-      font-family: cursive;
-      border: none;
-      border-bottom: 2px solid #e5e7eb;
-      transition: border-color 0.2s;
-    }
-
-    input[type="text"]:focus {
-      outline: none;
-      border-color: #1AB893;
-    }
-
-    .checkbox-group {
-      padding: 1rem;
-      background: #f9fafb;
-      border-radius: 6px;
-      margin-bottom: 1.5rem;
-    }
-
-    .checkbox-group label {
-      display: flex;
-      align-items: center;
-      font-weight: normal;
-      text-transform: none;
-      letter-spacing: normal;
-      cursor: pointer;
-    }
-
-    input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      margin-right: 0.75rem;
-      accent-color: #1AB893;
-    }
-
-    .buttons {
-      display: flex;
-      gap: 1rem;
-    }
-
-    button {
-      flex: 1;
-      padding: 0.875rem 1.5rem;
-      background: #1AB893;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-transform: uppercase;
-      letter-spacing: 0.025em;
-    }
-
-    button:disabled {
-      background: #e5e7eb;
-      color: #9ca3af;
-      cursor: not-allowed;
-    }
-
-    button:hover:not(:disabled) {
-      background: #16a085;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(26, 184, 147, 0.25);
-    }
-
-    #next-btn.ready {
-      background: #1AB893;
+      padding: 10px;
+      background: #f0f0f0;
+      margin: 10px 0;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>FCRA Disclosure Agreement</h1>
+  <h1>Terms of Service</h1>
 
-    <div id="status" class="status">Loading document...</div>
+  <!-- The document viewer - SuperDoc renders here -->
+  <div id="document-viewer" class="document-viewer"></div>
 
-    <div class="form-group">
-      <input type="file" id="file-upload" accept=".docx">
-      <label for="file-upload" style="margin-left: 10px">Or load your own document</label>
-    </div>
+  <!-- Your signature UI - tracked by eSign -->
+  <input id="signature-input" type="text" placeholder="Type your full name" />
 
-    <div id="document-viewer"></div>
+  <!-- Your consent UI - tracked by eSign -->
+  <label>
+    <input type="checkbox" name="tos" disabled />
+    I accept the terms of service
+  </label>
 
-    <div class="form-group">
-      <label for="signature">Electronic Signature</label>
-      <input type="text" id="signature" placeholder="Type your full name">
-    </div>
+  <!-- Status display -->
+  <div id="status" class="status">Loading...</div>
 
-    <div class="checkbox-group">
-      <label>
-        <input type="checkbox" name="acknowledge" data-consent="acknowledge">
-        I acknowledge that I have received and understand this document
-      </label>
-    </div>
+  <!-- 
+    Option 1: Load from CDN
+    <script src="https://unpkg.com/@superdoc-dev/esign"></script>
+  -->
 
-    <div class="buttons">
-      <button id="accept-btn" disabled>Accept Document</button>
-      <button id="next-btn" disabled>Next →</button>
-    </div>
-  </div>
-
+  <!-- Option 2: Load from local -->
   <script type="module">
-    // Import the actual component
-    // import SuperDocEsign from '@superdoc-dev/esign';
+    import SuperDocEsign from '../../dist/index.mjs';
 
-    // For demo purposes, we'll create a mock
-    class SuperDocEsign {
-      constructor(config) {
-        this.config = config;
-        this.state = {
-          scrolled: false,
-          signed: false,
-          consents: new Set()
-        };
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
 
-        setTimeout(() => {
-          this.config.onReady?.();
-          this.setupTracking();
-          this.updateFields(config.fields || {});
-        }, 100);
-      }
+      // Get DOM elements
+      const statusEl = document.getElementById('status');
+      const signatureInput = document.getElementById('signature-input');
+      const tosCheckbox = document.querySelector('input[name="tos"]');
 
-      setupTracking() {
-        // Scroll tracking
-        const container = document.querySelector('#document-viewer');
-        container.addEventListener('scroll', () => {
-          const scrollPercentage = container.scrollTop / (container.scrollHeight - container.clientHeight);
-          if (scrollPercentage >= 0.95) {
-            this.state.scrolled = true;
-            this.checkRequirements();
-          }
-        });
+      // Track state
+      let isAccepted = false;
 
-        // Signature tracking
-        const signature = document.querySelector('#signature');
-        signature.addEventListener('input', () => {
-          this.state.signed = signature.value.trim().length > 0;
-          this.checkRequirements();
-        });
+      // Initialize the component
+      const esign = new SuperDocEsign({
+        // 1. Where to render the document
+        container: '#document-viewer',
+        // or: container: document.getElementById('document-viewer'),
 
-        // Consent tracking
-        const checkbox = document.querySelector('[data-consent]');
-        checkbox.addEventListener('change', () => {
-          const id = checkbox.name;
-          if (checkbox.checked) {
-            this.state.consents.add(id);
+        // 2. What document to show
+        document: 'https://storage.googleapis.com/public_statichosting/word_documents/sample.docx',
+
+        // 3. Define requirements
+        requirements: {
+          scroll: true,      // Must scroll to bottom
+          signature: true,   // Must provide signature
+          consents: ['tos'] // Must check specific checkboxes
+        },
+
+        // 4. Tell eSign which UI elements to track
+        elements: {
+          signature: '#signature-input',
+          consents: 'input[name="tos"]'
+        },
+
+        // 5. Optional: Populate fields in the document
+        fields: {
+          userName: 'John Doe',
+          date: new Date().toLocaleDateString()
+        },
+
+        // 6. Callbacks for component lifecycle
+        onReady: function () {
+          console.log('Component ready');
+          statusEl.textContent = 'Please review the document';
+        },
+
+        onChange: function (status) {
+          console.log('Requirements changed:', status);
+
+          // Update UI based on requirements
+          if (!status.scroll) {
+            statusEl.textContent = 'Please scroll to bottom';
+            tosCheckbox.disabled = true;
+          } else if (!status.signature) {
+            statusEl.textContent = 'Please sign above';
+            tosCheckbox.disabled = true;
           } else {
-            this.state.consents.delete(id);
+            statusEl.textContent = 'Ready to accept';
+            tosCheckbox.disabled = false;
           }
-          this.checkRequirements();
-        });
-      }
 
-      checkRequirements() {
-        const status = this.getRequirementStatus();
-        this.config.onRequirementsChange?.(status);
-      }
+          // Auto-accept when checkbox is checked
+          if (status.isValid && !isAccepted) {
+            esign.accept();
+          }
+        },
 
-      getRequirementStatus() {
-        const reqs = this.config.requirements || {};
-        return {
-          scroll: !reqs.scroll || this.state.scrolled,
-          signature: !reqs.signature || this.state.signed,
-          consents: Array.from(this.state.consents),
-          isValid: (!reqs.scroll || this.state.scrolled) &&
-            (!reqs.signature || this.state.signed) &&
-            (!reqs.consents || reqs.consents.every(id => this.state.consents.has(id)))
-        };
-      }
+        onAccept: async function (auditData) {
+          console.log('Document accepted:', auditData);
+          /*
+          auditData contains:
+          {
+            timestamp: "2024-01-01T12:00:00Z",
+            duration: 45,  // seconds
+            scrolled: true,
+            signed: true,
+            consents: ['tos'],
+            fields: { userName: 'John Doe', ... }
+          }
+          */
 
-      updateFields(fields) {
-        Object.entries(fields).forEach(([key, value]) => {
-          const el = document.getElementById(`${key}-field`);
-          if (el) el.textContent = value;
-        });
-      }
+          // Send to your backend
+          try {
+            const response = await fetch('/api/accept-agreement', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(auditData)
+            });
 
-      async accept() {
-        const status = this.getRequirementStatus();
-        if (!status.isValid) return false;
+            if (response.ok) {
+              isAccepted = true;
+              statusEl.textContent = '✓ Agreement accepted';
+              signatureInput.disabled = true;
+              tosCheckbox.disabled = true;
+            }
+          } catch (error) {
+            console.error('Failed to save:', error);
+            statusEl.textContent = 'Error saving acceptance';
+          }
+        },
 
-        const data = {
-          timestamp: new Date().toISOString(),
-          fields: this.config.fields,
-          scrolled: this.state.scrolled,
-          signed: this.state.signed,
-          consents: Array.from(this.state.consents)
-        };
-
-        await this.config.onAccept?.(data);
-        return data;
-      }
-    }
-
-    // Helper function to load file from shared directory
-    async function loadFile(filename) {
-      const response = await fetch(`../shared/${filename}`);
-      if (!response.ok) {
-        throw new Error(`Failed to load ${filename}`);
-      }
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      return url;
-    }
-
-    // Initialize eSign
-    let accepted = false;
-    let esign = null; // Declare esign in outer scope
-    const statusEl = document.getElementById('status');
-    const acceptBtn = document.getElementById('accept-btn');
-    const nextBtn = document.getElementById('next-btn');
-
-    async function initializeEsign(documentSource) {
-      try {
-        // Clean up previous instance
-        if (esign && typeof esign.destroy === 'function') {
-          esign.destroy();
+        onError: function (error) {
+          console.error('eSign error:', error);
+          statusEl.textContent = 'Error: ' + error.message;
         }
-        esign = null;
+      });
 
-        // Reset state
-        accepted = false;
-        acceptBtn.disabled = true;
-        acceptBtn.textContent = 'Accept Document';
-        nextBtn.disabled = true;
-        nextBtn.classList.remove('ready');
+      // Example: Reset the document
+      window.resetDocument = function () {
+        esign.reset();
+        isAccepted = false;
+        signatureInput.disabled = false;
+        signatureInput.value = '';
+        tosCheckbox.checked = false;
+        tosCheckbox.disabled = true;
+        statusEl.textContent = 'Document reset';
+      };
 
-        // Use provided document or load default
-        const document = documentSource || await loadFile('sample.docx');
+      // Example: Load a new document
+      window.loadNewDocument = function (file) {
+        esign.loadDocument(file);
+      };
 
-        esign = new SuperDocEsign({
-          container: '#document-viewer',
-          document: document,
-
-          fields: {
-            company: 'Acme Corporation',
-            date: new Date().toLocaleDateString()
-          },
-
-          requirements: {
-            scroll: true,
-            signature: true,
-            consents: ['acknowledge']
-          },
-
-          elements: {
-            signature: '#signature',
-            consents: '[data-consent]'
-          },
-
-          onReady: () => {
-            console.log('eSign ready');
-            updateStatus();
-          },
-
-          onRequirementsChange: (status) => {
-            console.log('Requirements:', status);
-            acceptBtn.disabled = !status.isValid || accepted;
-            updateStatus();
-          },
-
-          onAccept: async (data) => {
-            console.log('Accepted:', data);
-            accepted = true;
-            acceptBtn.disabled = true;
-            acceptBtn.textContent = '✓ Accepted';
-            nextBtn.disabled = false;
-            nextBtn.classList.add('ready');
-            updateStatus();
-          },
-
-          onError: (error) => {
-            console.error('Error loading document:', error);
-            document.getElementById('document-viewer').innerHTML = `
-              <div style="color: red; padding: 20px;">
-                Error loading document: ${error.message}
-              </div>
-            `;
-          }
-        });
-      } catch (error) {
-        console.error('Failed to initialize eSign:', error);
-        esign = null; // Ensure esign is null on error
-        document.getElementById('document-viewer').innerHTML = `
-          <div style="color: red; padding: 20px;">
-            Failed to load document: ${error.message}
-            <br><small>${error.stack}</small>
-          </div>
-        `;
-      }
-    }
-
-    // Handle file uploads
-    document.getElementById('file-upload').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const url = URL.createObjectURL(file);
-        await initializeEsign(url);
-      }
-    });
-
-    // Initialize the component
-    initializeEsign();
-
-    function updateStatus() {
-      if (!esign) return;
-      const status = esign.getRequirementStatus();
-
-      if (accepted) {
-        statusEl.textContent = '✓ Document accepted - Click Next to proceed';
-        statusEl.className = 'status accepted';
-      } else if (status.isValid) {
-        statusEl.textContent = 'Ready to accept';
-        statusEl.className = 'status ready';
-      } else {
-        const pending = [];
-        if (!status.scroll) pending.push('scroll to bottom');
-        if (!status.signature) pending.push('add signature');
-        if (status.consents.length === 0) pending.push('check acknowledgment');
-        statusEl.textContent = `Please ${pending.join(', ')}`;
-        statusEl.className = 'status';
-      }
-    }
-
-    acceptBtn.addEventListener('click', () => {
-      esign.accept();
-    });
-
-    nextBtn.addEventListener('click', () => {
-      if (accepted) {
-        alert('Proceeding to next step...');
-      }
+      // Cleanup on page unload
+      window.addEventListener('beforeunload', function () {
+        esign.destroy();
+      });
     });
   </script>
 </body>

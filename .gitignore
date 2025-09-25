@@ -17,3 +17,8 @@ npm-debug.log*
 
 # Coverage
 coverage/
+
+# Examples
+examples/**/package-lock.json
+examples/**/pnpm-lock.yaml
+examples/**/yarn.lock
