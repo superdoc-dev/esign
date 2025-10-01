@@ -39,6 +39,9 @@ export function App() {
     // Audit data
     const [auditData, setAuditData] = useState<any>(null);
 
+    // Signature data
+    const [signatureData, setSignatureData] = useState<string | null>(null);
+
     // Collapsed sections
     const [collapsed, setCollapsed] = useState({
         requirements: false,
@@ -168,6 +171,54 @@ export function App() {
             esignRef.current?.destroy();
         };
     }, [config]);
+
+    // Track signature and update document field
+    useEffect(() => {
+        if (!status.ready) return;
+
+        const signatureInput = document.getElementById('signature-input') as HTMLInputElement;
+        if (!signatureInput) return;
+
+        const handleSignature = () => {
+            const value = signatureInput.value.trim();
+            if (value) {
+                // Create signature image from text
+                const canvas = document.createElement('canvas');
+                canvas.width = 400;
+                canvas.height = 80;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.font = '32px cursive';
+                    ctx.fillStyle = '#000';
+                    ctx.fillText(value, 10, 50);
+
+                    const dataUrl = canvas.toDataURL('image/png');
+                    setSignatureData(dataUrl);
+
+
+                    // Pass the signature image to the document
+                    esignRef.current?.superdoc?.activeEditor?.commands.updateStructuredContentByAlias('signature', {
+                        json: {
+                            type: 'image',
+                            attrs: { src: dataUrl, alt: 'Signature' }
+                        }
+                    });
+                }
+            } else {
+                setSignatureData(null);
+            }
+        };
+
+        signatureInput.addEventListener('input', handleSignature);
+        signatureInput.addEventListener('change', handleSignature);
+
+        return () => {
+            signatureInput.removeEventListener('input', handleSignature);
+            signatureInput.removeEventListener('change', handleSignature);
+        };
+    }, [status.ready]);
 
     const handleAccept = () => {
         if (status.isValid) {  // Use the component's isValid state
@@ -322,7 +373,9 @@ export function App() {
                                 <span style={{ float: 'right' }}>{collapsed.fields ? '▼' : '▲'}</span>
                             </h3>
                             {!collapsed.fields && <div className="fields-list">
-                                {fields.map((field, i) => (
+                                {fields.filter((field, i, arr) =>
+                                    arr.findIndex(f => (f.alias || f.id) === (field.alias || field.id)) === i
+                                ).map((field) => (
                                     <div key={field.id} className="field-item">
                                         <label>
                                             <code>{field.label || field.id}</code>
@@ -331,13 +384,18 @@ export function App() {
                                             type="text"
                                             value={field.value}
                                             onChange={(e) => {
-                                                const newFields = [...fields];
-                                                newFields[i].value = e.target.value;
+                                                const newValue = e.target.value;
+                                                const groupKey = field.alias || field.id;
+                                                const newFields = fields.map(f =>
+                                                    (f.alias || f.id) === groupKey ? { ...f, value: newValue } : f
+                                                );
                                                 setFields(newFields);
-                                                esignRef.current?.updateFields([{
-                                                    id: field.id,
-                                                    value: e.target.value
-                                                }]);
+                                                esignRef.current?.updateFields(
+                                                    fields.filter(f => (f.alias || f.id) === groupKey).map(f => ({
+                                                        id: f.id,
+                                                        value: newValue
+                                                    }))
+                                                );
                                             }}
                                             placeholder="Enter value..."
                                         />
