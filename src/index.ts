@@ -1,12 +1,18 @@
 /**
  * @superdoc-dev/esign
  * eSignature component for SuperDoc
- * 
+ *
  * @version 0.1.0
  * @license MIT
  */
 
 type SuperDocInstance = import("superdoc").SuperDoc;
+
+export interface FieldUpdate {
+  id?: string;
+  alias?: string;
+  value: any;
+}
 
 export interface SuperDocEsignConfig {
   // Document setup
@@ -15,7 +21,7 @@ export interface SuperDocEsignConfig {
   superdoc?: SuperDocInstance;
 
   // Field values to replace
-  fields?: Record<string, any>;
+  fields?: FieldUpdate[];
 
   // Requirements
   requirements?: {
@@ -48,10 +54,11 @@ export interface Status {
 export interface AuditData {
   timestamp: string;
   duration: number;
-  fields: Record<string, any>;
+  fields: FieldUpdate[];
   scrolled: boolean;
   signed: boolean;
   consents: string[];
+  signatureImage?: string;
 }
 
 export interface FieldInfo {
@@ -68,7 +75,7 @@ export default class SuperDocEsign {
     signed: false,
     consents: new Set<string>(),
     startTime: Date.now(),
-    fields: new Map<string, FieldInfo>()
+    fields: new Map<string, FieldInfo>(),
   };
 
   constructor(config: SuperDocEsignConfig) {
@@ -85,7 +92,9 @@ export default class SuperDocEsign {
       } else if (this.config.document && this.config.container) {
         await this.initSuperDoc();
       } else {
-        throw new Error('Either superdoc instance or document + container required');
+        throw new Error(
+          "Either superdoc instance or document + container required",
+        );
       }
     } catch (error) {
       this.config.onError?.(error as Error);
@@ -101,21 +110,21 @@ export default class SuperDocEsign {
         document: this.config.document,
         documentMode: "viewing",
         onReady: () => this.onSuperDocReady(),
-        onException: ({ error }: { error: Error }) => this.config.onError?.(error)
+        onException: ({ error }: { error: Error }) =>
+          this.config.onError?.(error),
       });
-    } catch (error) {
-      throw new Error('Failed to initialize SuperDoc');
+    } catch {
+      throw new Error("Failed to initialize SuperDoc");
     }
   }
 
   private onSuperDocReady(): void {
     // Discover and populate fields
-    // TODO: Not supported yet
-    // this.discoverFields();
+    this.discoverFields();
 
-    // if (this.config.fields) {
-    //   this.updateFields(this.config.fields);
-    // }
+    if (this.config.fields) {
+      this.updateFields(this.config.fields);
+    }
 
     // Setup tracking
     this.setupTracking();
@@ -128,12 +137,33 @@ export default class SuperDocEsign {
   private discoverFields(): void {
     if (!this.superdoc?.activeEditor) return;
 
-    // TODO: Query SuperDoc for actual fields
-    // For now, just notify if callback exists
-    const fields: FieldInfo[] = [];
+    const editor = this.superdoc.activeEditor;
+    const tags =
+      editor.helpers.structuredContentCommands.getStructuredContentTags(
+        editor.state,
+      );
+
+    // Create a map of initial values from config
+    const configValues = new Map<string, any>();
+    this.config.fields?.forEach((f) => {
+      const key = f.id || f.alias;
+      if (key) configValues.set(key, f.value);
+    });
+
+    const fields: FieldInfo[] = tags.map(({ node }: { node: any }) => {
+      const id = node.attrs.id;
+      const alias = node.attrs.alias;
+      const configValue = configValues.get(id) ?? configValues.get(alias);
+
+      return {
+        id,
+        label: alias,
+        value: configValue ?? node.textContent ?? "",
+      };
+    });
 
     if (fields.length > 0) {
-      fields.forEach(field => this.state.fields.set(field.id, field));
+      fields.forEach((field) => this.state.fields.set(field.id, field));
       this.config.onFieldsDiscovered?.(fields);
     }
   }
@@ -145,7 +175,10 @@ export default class SuperDocEsign {
     }
 
     // Signature tracking
-    if (this.config.requirements?.signature && this.config.elements?.signature) {
+    if (
+      this.config.requirements?.signature &&
+      this.config.elements?.signature
+    ) {
       this.trackSignature();
     }
 
@@ -169,7 +202,7 @@ export default class SuperDocEsign {
       }
     };
 
-    container.addEventListener('scroll', handleScroll);
+    container.addEventListener("scroll", handleScroll);
 
     // Check if already scrolled
     handleScroll();
@@ -188,7 +221,7 @@ export default class SuperDocEsign {
     };
 
     // Listen for changes
-    ['input', 'change', 'mouseup', 'touchend'].forEach(event => {
+    ["input", "change", "mouseup", "touchend"].forEach((event) => {
       element.addEventListener(event, checkSignature);
     });
   }
@@ -196,13 +229,13 @@ export default class SuperDocEsign {
   private trackConsents(): void {
     const elements = this.getElements(this.config.elements?.consents);
 
-    elements.forEach(element => {
+    elements.forEach((element) => {
       const checkbox = element as HTMLInputElement;
       const id = checkbox.name || checkbox.id;
 
       if (!id) return;
 
-      checkbox.addEventListener('change', () => {
+      checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
           this.state.consents.add(id);
         } else {
@@ -225,28 +258,30 @@ export default class SuperDocEsign {
 
   private hasSignatureValue(element: HTMLElement): boolean {
     // Canvas
-    if (element.tagName === 'CANVAS') {
+    if (element.tagName === "CANVAS") {
       const canvas = element as HTMLCanvasElement;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (!ctx) return false;
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      return imageData.data.some(channel => channel !== 0);
+      return imageData.data.some((channel) => channel !== 0);
     }
 
     // Input
-    if ('value' in element) {
+    if ("value" in element) {
       return !!(element as HTMLInputElement).value?.trim();
     }
 
     // Custom component
-    return element.dataset.signed === 'true';
+    return element.dataset.signed === "true";
   }
 
   private getScrollContainer(): HTMLElement | null {
     const container = this.config.container
       ? this.getElement(this.config.container)
-      : document.querySelector('.super-editor-scroll-container') as HTMLElement | null;
+      : (document.querySelector(
+          ".super-editor-scroll-container",
+        ) as HTMLElement | null);
 
     return container;
   }
@@ -257,22 +292,31 @@ export default class SuperDocEsign {
     return Array.from(this.state.fields.values());
   }
 
-  updateFields(fields: Record<string, any>): void {
+  updateFields(fields: FieldUpdate[]): void {
     if (!this.superdoc?.activeEditor) return;
 
-    // TODO: Implement this with new SDT approach
-    // Object.entries(fields).forEach(([fieldId, value]) => {
-    //   // Update in SuperDoc
-    //   this.superdoc?.activeEditor?.commands?.updateFieldAnnotations?.(fieldId, {
-    //     displayLabel: String(value)
-    //   });
+    const editor = this.superdoc.activeEditor;
 
-    //   // Update local state
-    //   const field = this.state.fields.get(fieldId);
-    //   if (field) {
-    //     field.value = value;
-    //   }
-    // });
+    fields.forEach(({ id, alias, value }) => {
+      const textValue = String(value);
+
+      if (id) {
+        editor.commands.updateStructuredContentById(id, { text: textValue });
+        const field = this.state.fields.get(id);
+        if (field) field.value = value;
+      } else if (alias) {
+        editor.commands.updateStructuredContentByAlias(alias, {
+          text: textValue,
+        });
+        // Update local state by finding field with matching alias
+        for (const field of this.state.fields.values()) {
+          if (field.label === alias) {
+            field.value = value;
+            break;
+          }
+        }
+      }
+    });
   }
 
   getStatus(): Status {
@@ -283,12 +327,12 @@ export default class SuperDocEsign {
       scroll: !requirements.scroll || this.state.scrolled,
       signature: !requirements.signature || this.state.signed,
       consents: Array.from(this.state.consents),
-      isValid: false
+      isValid: false,
     };
 
     // Check if all consents are met
-    const allConsents = requiredConsents.every(id =>
-      this.state.consents.has(id)
+    const allConsents = requiredConsents.every((id) =>
+      this.state.consents.has(id),
     );
 
     status.isValid = status.scroll && status.signature && allConsents;
@@ -305,13 +349,23 @@ export default class SuperDocEsign {
       return false;
     }
 
+    // Get current field values
+    const currentFields: FieldUpdate[] = Array.from(
+      this.state.fields.values(),
+    ).map((f) => ({
+      id: f.id,
+      alias: f.label,
+      value: f.value,
+    }));
+
     const data: AuditData = {
       timestamp: new Date().toISOString(),
       duration: Math.round((Date.now() - this.state.startTime) / 1000),
-      fields: this.config.fields || {},
+      fields: currentFields,
       scrolled: this.state.scrolled,
       signed: this.state.signed,
-      consents: Array.from(this.state.consents)
+      consents: Array.from(this.state.consents),
+      signatureImage: this.getSignatureImage(),
     };
 
     await this.config.onAccept?.(data);
@@ -324,7 +378,7 @@ export default class SuperDocEsign {
       signed: false,
       consents: new Set<string>(),
       startTime: Date.now(),
-      fields: this.state.fields
+      fields: this.state.fields,
     };
 
     const container = this.getScrollContainer();
@@ -344,9 +398,17 @@ export default class SuperDocEsign {
 
   // Utilities
 
+  private getSignatureImage(): string | undefined {
+    const element = this.getElement(this.config.elements?.signature);
+    if (element?.tagName === "CANVAS") {
+      return (element as HTMLCanvasElement).toDataURL("image/png");
+    }
+    return undefined;
+  }
+
   private getElement(selector: any): HTMLElement | null {
     if (!selector) return null;
-    if (typeof selector === 'string') {
+    if (typeof selector === "string") {
       return document.querySelector<HTMLElement>(selector);
     }
     return selector as HTMLElement;
@@ -355,7 +417,7 @@ export default class SuperDocEsign {
   private getElements(selectors: any): HTMLElement[] {
     if (!selectors) return [];
 
-    if (typeof selectors === 'string') {
+    if (typeof selectors === "string") {
       return Array.from(document.querySelectorAll<HTMLElement>(selectors));
     }
 
@@ -364,7 +426,9 @@ export default class SuperDocEsign {
     }
 
     if (Array.isArray(selectors)) {
-      return selectors.map(s => this.getElement(s)).filter(Boolean) as HTMLElement[];
+      return selectors
+        .map((s) => this.getElement(s))
+        .filter(Boolean) as HTMLElement[];
     }
 
     return [selectors];

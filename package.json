@@ -47,7 +47,7 @@
   },
   "homepage": "https://github.com/superdoc-dev/esign#readme",
   "peerDependencies": {
-    "superdoc": ">=0.22.0"
+    "superdoc": "^0.22.1"
   },
   "peerDependenciesMeta": {
     "superdoc": {

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import SuperDocEsign from '@superdoc-dev/esign';
+import 'superdoc/dist/style.css';
 import './App.css';
 
 export function App() {
@@ -31,6 +32,24 @@ export function App() {
 
     // Event log
     const [events, setEvents] = useState<string[]>([]);
+
+    // Fields
+    const [fields, setFields] = useState<any[]>([]);
+
+    // Audit data
+    const [auditData, setAuditData] = useState<any>(null);
+
+    // Collapsed sections
+    const [collapsed, setCollapsed] = useState({
+        requirements: false,
+        fields: true,
+        status: false,
+        events: false
+    });
+
+    const toggleSection = (section: keyof typeof collapsed) => {
+        setCollapsed(prev => ({ ...prev, [section]: !prev[section] }));
+    };
 
     const log = (msg: string) => {
         const time = new Date().toLocaleTimeString('en-US', {
@@ -64,7 +83,7 @@ export function App() {
         // Initialize
         esignRef.current = new SuperDocEsign({
             container: containerRef.current!,
-            document: 'https://storage.googleapis.com/public_statichosting/word_documents/employment_agreement.docx',
+            document: 'https://storage.googleapis.com/public_statichosting/word_documents/agreement_template.docx',
 
             requirements: config,
 
@@ -73,11 +92,16 @@ export function App() {
                 consents: '[data-consent]'
             },
 
-            fields: {
-                employeeName: 'John Doe',
-                position: 'Senior Developer',
-                startDate: new Date().toLocaleDateString()
-            },
+            fields: [{
+                alias: 'userName',
+                value: 'John Doe'
+            }, {
+                alias: 'date',
+                value: new Date().toLocaleDateString()
+            }, {
+                alias: 'company',
+                value: 'SuperDoc'
+            }],
 
             onReady: () => {
                 log('Component initialized');
@@ -128,10 +152,15 @@ export function App() {
                 prevRequirementsRef.current = reqs;
             },
 
+            onFieldsDiscovered: (discoveredFields) => {
+                log(`Discovered ${discoveredFields.length} fields`);
+                setFields(discoveredFields);
+            },
+
             onAccept: (data) => {
                 log(`Agreement accepted`);
                 setStatus(s => ({ ...s, accepted: true }));
-                console.log('Audit data:', data);
+                setAuditData(data);
             }
         });
 
@@ -185,11 +214,26 @@ export function App() {
                             <div className="success-icon">✅</div>
                             <h3>Agreement Successfully Accepted!</h3>
                             <p>The employment agreement has been signed and recorded.</p>
-                            <div className="audit-info">
-                                <p><strong>Timestamp:</strong> {new Date().toISOString()}</p>
-                                <p><strong>Document:</strong> Employment Agreement v2.1</p>
-                                <p><strong>Status:</strong> Legally Binding</p>
-                            </div>
+                            {auditData && (
+                                <div className="audit-info">
+                                    <p><strong>Timestamp:</strong> {auditData.timestamp}</p>
+                                    <p><strong>Duration:</strong> {auditData.duration}s</p>
+                                    <p><strong>Scrolled:</strong> {auditData.scrolled ? 'Yes' : 'No'}</p>
+                                    <p><strong>Signed:</strong> {auditData.signed ? 'Yes' : 'No'}</p>
+                                    <p><strong>Consents:</strong> {auditData.consents.join(', ') || 'None'}</p>
+                                    {auditData.fields.length > 0 && (
+                                        <p><strong>Fields:</strong> {auditData.fields.map((f: any) =>
+                                            `${f.alias || f.id}: ${f.value}`
+                                        ).join(', ')}</p>
+                                    )}
+                                    {auditData.signatureImage && (
+                                        <div style={{ marginTop: '12px' }}>
+                                            <p><strong>Signature:</strong></p>
+                                            <img src={auditData.signatureImage} alt="Signature" style={{ border: '1px solid #ddd', borderRadius: '4px', maxWidth: '300px' }} />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <>
@@ -270,10 +314,46 @@ export function App() {
 
                 {/* Right: Controls & Events */}
                 <div className="control-side">
+                    {/* Fields */}
+                    {fields.length > 0 && (
+                        <div className="panel">
+                            <h3 onClick={() => toggleSection('fields')} style={{ cursor: 'pointer' }}>
+                                Document Fields
+                                <span style={{ float: 'right' }}>{collapsed.fields ? '▼' : '▲'}</span>
+                            </h3>
+                            {!collapsed.fields && <div className="fields-list">
+                                {fields.map((field, i) => (
+                                    <div key={field.id} className="field-item">
+                                        <label>
+                                            <code>{field.label || field.id}</code>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={field.value}
+                                            onChange={(e) => {
+                                                const newFields = [...fields];
+                                                newFields[i].value = e.target.value;
+                                                setFields(newFields);
+                                                esignRef.current?.updateFields([{
+                                                    id: field.id,
+                                                    value: e.target.value
+                                                }]);
+                                            }}
+                                            placeholder="Enter value..."
+                                        />
+                                    </div>
+                                ))}
+                            </div>}
+                        </div>
+                    )}
+
                     {/* Configuration */}
                     <div className="panel">
-                        <h3>Requirements: {`{}`}</h3>
-                        <div className="config-options">
+                        <h3 onClick={() => toggleSection('requirements')} style={{ cursor: 'pointer' }}>
+                            Requirements: {`{}`}
+                            <span style={{ float: 'right' }}>{collapsed.requirements ? '▼' : '▲'}</span>
+                        </h3>
+                        {!collapsed.requirements && <div className="config-options">
                             <label>
                                 <input
                                     type="checkbox"
@@ -316,13 +396,16 @@ export function App() {
                                 />
                                 <code>consents: ['privacy']</code>
                             </label>
-                        </div>
+                        </div>}
                     </div>
 
                     {/* Status */}
                     <div className="panel">
-                        <h3>Status</h3>
-                        <div className="status-list">
+                        <h3 onClick={() => toggleSection('status')} style={{ cursor: 'pointer' }}>
+                            Status
+                            <span style={{ float: 'right' }}>{collapsed.status ? '▼' : '▲'}</span>
+                        </h3>
+                        {!collapsed.status && <div className="status-list">
                             <div className={status.ready ? 'active' : ''}>
                                 <span className="indicator">{status.ready ? '●' : '○'}</span>
                                 Ready
@@ -347,13 +430,16 @@ export function App() {
                                 <span className="indicator">{status.accepted ? '●' : '○'}</span>
                                 Accepted
                             </div>
-                        </div>
+                        </div>}
                     </div>
 
                     {/* Events */}
                     <div className="panel">
-                        <h3>Event Log</h3>
-                        <div className="event-log">
+                        <h3 onClick={() => toggleSection('events')} style={{ cursor: 'pointer' }}>
+                            Event Log
+                            <span style={{ float: 'right' }}>{collapsed.events ? '▼' : '▲'}</span>
+                        </h3>
+                        {!collapsed.events && <div className="event-log">
                             {events.length === 0 ? (
                                 <div className="empty">Waiting for events...</div>
                             ) : (
@@ -361,7 +447,7 @@ export function App() {
                                     <div key={i} className="event-item">{evt}</div>
                                 ))
                             )}
-                        </div>
+                        </div>}
                     </div>
                 </div>
             </div>

@@ -345,6 +345,36 @@ small {
     margin-left: 0.5rem;
 }
 
+.fields-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.field-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.field-item label {
+    font-size: 0.75rem;
+    color: #86868b;
+}
+
+.field-item input {
+    padding: 0.5rem;
+    border: 1px solid #e5e5e7;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: inherit;
+}
+
+.field-item input:focus {
+    outline: none;
+    border-color: #007aff;
+}
+
 .indicator {
     display: inline-block;
     width: 12px;
