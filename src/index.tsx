@@ -409,7 +409,7 @@ const SuperDocESign = forwardRef<SuperDocESignHandle, SuperDocESignProps>(
       setConsents(new Set());
       startTimeRef.current = Date.now();
 
-      // Reset scroll  
+      // Reset scroll
       if (containerRef.current) {
         containerRef.current.scrollTop = 0;
       }
@@ -462,12 +462,14 @@ const SuperDocESign = forwardRef<SuperDocESignHandle, SuperDocESignProps>(
       return Array.from(fields.values());
     }, [fields]);
 
-    const requestDownload = useCallback(async (): Promise<DownloadRequestData | false> => {
+    const requestDownload = useCallback(async (): Promise<
+      DownloadRequestData | false
+    > => {
       if (!superdocRef.current) return false;
 
       try {
         const result = await superdocRef.current.export({
-          exportType: ['docx'],
+          exportType: ["docx"],
           isFinalDoc: true,
           triggerDownload: false,
         });
@@ -482,7 +484,7 @@ const SuperDocESign = forwardRef<SuperDocESignHandle, SuperDocESignProps>(
         await onDownloadRequest?.(downloadData);
         return downloadData;
       } catch (error) {
-        console.error('Download request failed:', error);
+        console.error("Download request failed:", error);
         return false;
       }
     }, [fields, onDownloadRequest]);
@@ -496,14 +498,15 @@ const SuperDocESign = forwardRef<SuperDocESignHandle, SuperDocESignProps>(
         requestDownload();
       };
 
-      const downloadElements = globalThis.document.querySelectorAll(downloadSelector);
+      const downloadElements =
+        globalThis.document.querySelectorAll(downloadSelector);
       downloadElements.forEach((el) => {
-        el.addEventListener('click', handleDownloadClick);
+        el.addEventListener("click", handleDownloadClick);
       });
 
       return () => {
         downloadElements.forEach((el) => {
-          el.removeEventListener('click', handleDownloadClick);
+          el.removeEventListener("click", handleDownloadClick);
         });
       };
     }, [downloadSelector, isReady, requestDownload]);
