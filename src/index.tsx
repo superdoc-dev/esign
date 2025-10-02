@@ -57,7 +57,7 @@ export interface SuperDocESignProps {
   // Initial field values
   fields?: FieldUpdate[];
 
-  // Element selectors (for finding signature/consent elements)
+  // Element selectors
   signatureSelector?: string;
   consentSelector?: string;
   downloadSelector?: string;
