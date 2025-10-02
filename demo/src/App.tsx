@@ -294,7 +294,10 @@ export function App() {
                                     fields={[
                                         { alias: 'userName', value: 'John Doe' },
                                         { alias: 'date', value: new Date().toLocaleDateString() },
-                                        { alias: 'company', value: 'SuperDoc' }
+                                        { alias: 'company', value: 'SuperDoc' },
+                                        { alias: 'serviceType', value: 'Premium' },
+                                        { alias: 'jurisdiction', value: 'CA' },
+                                        { alias: 'companyAddress', value: '123 Main St, Anytown, USA' }
                                     ]}
                                     signatureSelector="[data-esign-signature]"
                                     consentSelector="[data-esign-consent]"
