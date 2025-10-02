@@ -38,6 +38,11 @@ export interface FieldInfo {
   value?: any;
 }
 
+export interface DownloadRequestData {
+  blob: Blob;
+  fields: FieldInfo[];
+}
+
 export interface SuperDocESignProps {
   // Document
   document: string | File | Blob;
@@ -55,12 +60,14 @@ export interface SuperDocESignProps {
   // Element selectors (for finding signature/consent elements)
   signatureSelector?: string;
   consentSelector?: string;
+  downloadSelector?: string;
 
   // Callbacks
   onReady?: () => void;
   onChange?: (status: Status) => void;
   onAccept?: (data: AuditData) => void | Promise<void>;
   onFieldsDiscovered?: (fields: FieldInfo[]) => void;
+  onDownloadRequest?: (data: DownloadRequestData) => void | Promise<void>;
 
   // Style
   className?: string;
@@ -73,6 +80,7 @@ export interface SuperDocESignHandle {
   updateFields: (fields: FieldUpdate[]) => void;
   getStatus: () => Status;
   getFields: () => FieldInfo[];
+  requestDownload: () => Promise<DownloadRequestData | false>;
   superdoc: SuperDoc | null;
 }
 
@@ -84,10 +92,12 @@ const SuperDocESign = forwardRef<SuperDocESignHandle, SuperDocESignProps>(
       fields: initialFields = [],
       signatureSelector = "[data-esign-signature]",
       consentSelector = "[data-esign-consent]",
+      downloadSelector = "[data-esign-download]",
       onReady,
       onChange,
       onAccept,
       onFieldsDiscovered,
+      onDownloadRequest,
       className,
       style,
     },
@@ -452,6 +462,52 @@ const SuperDocESign = forwardRef<SuperDocESignHandle, SuperDocESignProps>(
       return Array.from(fields.values());
     }, [fields]);
 
+    const requestDownload = useCallback(async (): Promise<DownloadRequestData | false> => {
+      if (!superdocRef.current) return false;
+
+      try {
+        const result = await superdocRef.current.export({
+          exportType: ['docx'],
+          isFinalDoc: true,
+          triggerDownload: false,
+        });
+
+        if (!result) return false;
+
+        const downloadData: DownloadRequestData = {
+          blob: result,
+          fields: Array.from(fields.values()),
+        };
+
+        await onDownloadRequest?.(downloadData);
+        return downloadData;
+      } catch (error) {
+        console.error('Download request failed:', error);
+        return false;
+      }
+    }, [fields, onDownloadRequest]);
+
+    // Track download button clicks
+    useEffect(() => {
+      if (!isReady) return;
+
+      const handleDownloadClick = (e: Event) => {
+        e.preventDefault();
+        requestDownload();
+      };
+
+      const downloadElements = globalThis.document.querySelectorAll(downloadSelector);
+      downloadElements.forEach((el) => {
+        el.addEventListener('click', handleDownloadClick);
+      });
+
+      return () => {
+        downloadElements.forEach((el) => {
+          el.removeEventListener('click', handleDownloadClick);
+        });
+      };
+    }, [downloadSelector, isReady, requestDownload]);
+
     // Expose methods via ref
     useImperativeHandle(
       ref,
@@ -461,9 +517,10 @@ const SuperDocESign = forwardRef<SuperDocESignHandle, SuperDocESignProps>(
         updateFields,
         getStatus,
         getFields,
+        requestDownload,
         superdoc: superdocRef.current,
       }),
-      [accept, reset, updateFields, getStatus, getFields],
+      [accept, reset, updateFields, getStatus, getFields, requestDownload],
     );
 
     return <div ref={containerRef} className={className} style={style} />;

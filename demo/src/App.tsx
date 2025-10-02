@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import SuperDocESign from '@superdoc-dev/esign';
-import type { SuperDocESignHandle, Status, AuditData, FieldInfo } from '@superdoc-dev/esign';
+import type { SuperDocESignHandle, Status, AuditData, FieldInfo, DownloadRequestData } from '@superdoc-dev/esign';
 import 'superdoc/dist/style.css';
 import './App.css';
 
@@ -113,6 +113,28 @@ export function App() {
         log('Agreement accepted');
         setIsAccepted(true);
         setAuditData(data);
+    }, [log]);
+
+    const handleDownloadRequest = useCallback(async (data: DownloadRequestData) => {
+        log(`Download requested - ${data.fields.length} fields included`);
+
+        // Simulate sending to server for PDF conversion
+        // In production, you would send to your backend:
+        // const formData = new FormData();
+        // formData.append('document', data.blob, 'document.docx');
+        // formData.append('fields', JSON.stringify(data.fields));
+        // const response = await fetch('/api/convert-to-pdf', { method: 'POST', body: formData });
+        // const pdfBlob = await response.blob();
+
+        // For demo: just download the DOCX
+        const url = URL.createObjectURL(data.blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `agreement-${Date.now()}.docx`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        log('Download complete');
     }, [log]);
 
     const handleReset = () => {
@@ -286,7 +308,22 @@ export function App() {
                         <>
                             {/* Document Viewer */}
                             <div className="document-section">
-                                <label>Employment Agreement</label>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <label style={{ margin: 0 }}>Employment Agreement</label>
+                                    <a
+                                        href="#"
+                                        data-esign-download
+                                        style={{
+                                            color: '#6366f1',
+                                            textDecoration: 'none',
+                                            fontSize: '14px',
+                                            opacity: isReady ? 1 : 0.5,
+                                            pointerEvents: isReady ? 'auto' : 'none'
+                                        }}
+                                    >
+                                        Download
+                                    </a>
+                                </div>
                                 <SuperDocESign
                                     ref={esignRef}
                                     document="https://storage.googleapis.com/public_statichosting/word_documents/agreement_template.docx"
@@ -305,6 +342,7 @@ export function App() {
                                     onChange={handleStatusChange}
                                     onAccept={handleAccept}
                                     onFieldsDiscovered={handleFieldsDiscovered}
+                                    onDownloadRequest={handleDownloadRequest}
                                     className="document-container"
                                 />
                                 {!status.scroll && config.scroll && (
