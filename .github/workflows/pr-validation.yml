@@ -16,18 +16,22 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: "pnpm"
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
       - name: Validate commits
         run: |
-          npx commitlint \
+          pnpm dlx commitlint \
             --from ${{ github.event.pull_request.base.sha }} \
             --to ${{ github.event.pull_request.head.sha }}
 
-      - run: npm run lint
-      - run: npm run build
-      - run: npm test
+      - run: pnpm lint
+      - run: pnpm build
