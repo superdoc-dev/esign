@@ -526,7 +526,12 @@ const SuperDocESign = forwardRef<SuperDocESignHandle, SuperDocESignProps>(
       [accept, reset, updateFields, getStatus, getFields, requestDownload],
     );
 
-    return <div ref={containerRef} className={className} style={style} />;
+    return <div
+      ref={containerRef}
+      className={`superdoc-esign ${className || ''}`}
+      data-superdoc="esign"
+      style={style}
+    />;
   },
 );
 
