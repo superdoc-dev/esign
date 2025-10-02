@@ -1,0 +1,19 @@
+name: Promote to Stable
+
+on:
+  workflow_dispatch:
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout stable || git checkout -b stable
+          git merge main --no-ff -m "chore: promote main to stable"
+          git push origin stable
