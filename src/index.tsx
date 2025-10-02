@@ -234,6 +234,7 @@ const SuperDocESign = forwardRef<SuperDocESignHandle, SuperDocESignProps>(
         const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
         const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
 
+        // Hardcoded to 95%
         if (scrollPercentage >= 0.95 || scrollHeight <= clientHeight) {
           setScrolled(true);
         }
