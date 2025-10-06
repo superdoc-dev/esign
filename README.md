@@ -71,10 +71,9 @@ function App() {
 ```jsx
 document={{
   source: File | Blob | string,  // Required
-  mode: 'full' | 'download_only' | 'preview',
+  mode: 'full' | 'download' | 'preview',
   displayOptions: {
-    scrollRequired: boolean,
-    watermark: boolean
+    scrollRequired: boolean
   }
 }}
 ```
@@ -154,9 +153,7 @@ fields={{
       alias: 'field_ref',  // Optional alias for document references
       type: 'signature' | 'consent' | 'checkbox' | 'text',
       validation: {
-        required: boolean,
-        minLength: number,
-        maxLength: number
+        required: boolean
       },
       label: 'Field Label',
       component: CustomComponent // Optional - consistent with download/submit!
@@ -171,14 +168,11 @@ Simple customization:
 ```jsx
 download={{
   fileName: "contract.pdf",
-  label: "Download Contract",
-  variant: "secondary"
+  label: "Download Contract"
 }}
 
 submit={{
-  label: "Sign Document",
-  loadingLabel: "Processing...",
-  variant: "primary"
+  label: "Sign Document"
 }}
 ```
 
@@ -368,15 +362,11 @@ fields={{
   
   download={{
     fileName: 'service_agreement_signed.pdf',
-    label: 'Download Agreement',
-    variant: 'secondary'
+    label: 'Download Agreement'
   }}
   
   submit={{
-    label: 'Sign Agreement',
-    loadingLabel: 'Processing...',
-    invalidLabel: 'Please complete all required fields',
-    variant: 'success'
+    label: 'Sign Agreement'
   }}
   
   onSubmit={async (data) => {
@@ -412,7 +402,7 @@ The component supports three levels of customization:
 <SuperDocESign
   eventId="session-2"
   document={{ source: "doc.pdf" }}
-  submit={{ label: "I Agree", variant: "success" }}
+  submit={{ label: "I Agree" }}
   download={{ label: "Get Copy" }}
   onSubmit={handleSubmit}
 />
@@ -449,7 +439,3 @@ import type {
   FieldComponentProps
 } from '@superdoc-dev/esign';
 ```
-
-## License
-
-MIT
