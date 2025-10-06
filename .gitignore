@@ -22,3 +22,6 @@ coverage/
 examples/**/package-lock.json
 examples/**/pnpm-lock.yaml
 examples/**/yarn.lock
+
+# Dev
+dev/**
