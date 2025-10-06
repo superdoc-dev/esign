@@ -18,6 +18,8 @@ import {
 export * from "./types";
 export { SignatureInput, ConsentCheckbox };
 
+type Editor = NonNullable<SuperDoc["activeEditor"]>;
+
 const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
   (props, ref) => {
     const {
@@ -41,7 +43,9 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
     const [scrolled, setScrolled] = useState(
       !document.displayOptions?.scrollRequired,
     );
-    const [fieldValues, setFieldValues] = useState<Map<string, any>>(new Map());
+    const [fieldValues, setFieldValues] = useState<
+      Map<string, Types.FieldValue>
+    >(new Map());
     const [isValid, setIsValid] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [auditTrail, setAuditTrail] = useState<Types.AuditEvent[]>([]);
@@ -64,12 +68,75 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         editor.commands.updateStructuredContentById(field.id, {
           text: textValue,
         });
-      } else if (field.alias) {
+      }
+      if (field.alias) {
         editor.commands.updateStructuredContentByAlias(field.alias, {
           text: textValue,
         });
       }
     }, []);
+
+    // Discover fields in document and apply initial values
+    const discoverAndApplyFields = useCallback(
+      (editor: Editor) => {
+        if (!editor) return;
+
+        const tags =
+          editor.helpers.structuredContentCommands.getStructuredContentTags(
+            editor.state,
+          );
+
+        // Build initial values map
+        const configValues = new Map<string, Types.FieldValue>();
+
+        fieldsRef.current.document?.forEach((f) => {
+          if (f.id) configValues.set(f.id, f.value);
+          if (f.alias) configValues.set(f.alias, f.value);
+        });
+
+        fieldsRef.current.signer?.forEach((f) => {
+          if (f.value !== undefined) {
+            configValues.set(f.id, f.value);
+            if (f.alias) configValues.set(f.alias, f.value);
+          }
+        });
+
+        // Discover fields
+        const discovered: Types.FieldInfo[] = tags
+          .map(({ node }: any) => ({
+            id: node.attrs.id,
+            alias: node.attrs.alias,
+            label: node.attrs.alias,
+            value:
+              configValues.get(node.attrs.id) ??
+              configValues.get(node.attrs.alias) ??
+              node.textContent ??
+              "",
+          }))
+          .filter((f: Types.FieldInfo) => f.id || f.alias);
+
+        if (discovered.length > 0) {
+          onFieldsDiscovered?.(discovered);
+
+          // Apply initial values from both document and signer fields
+          const allFields = [
+            ...(fieldsRef.current.document || []),
+            ...(fieldsRef.current.signer || []),
+          ];
+
+          allFields
+            .filter((field) => field.value !== undefined)
+            .forEach((field) =>
+              updateFieldInDocument({
+                id: field.id,
+                alias: field.alias,
+                value: field.value!,
+              }),
+            );
+        }
+      },
+      [onFieldsDiscovered, updateFieldInDocument],
+    );
 
     // Add audit event
     const addAuditEvent = (event: Omit<Types.AuditEvent, "timestamp">) => {
@@ -92,80 +159,9 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
           document: document.source,
           documentMode: "viewing",
           onReady: () => {
-            // Inline field discovery to avoid dependency issues
             if (instance.activeEditor) {
-              const editor = instance.activeEditor;
-              const tags =
-                editor.helpers.structuredContentCommands.getStructuredContentTags(
-                  editor.state,
-                );
-
-              // Create a map of initial values
-              const configValues = new Map<string, any>();
-
-              // Add document field values
-              fieldsRef.current.document?.forEach((f) => {
-                if (f.id) configValues.set(f.id, f.value);
-                if (f.alias) configValues.set(f.alias, f.value);
-              });
-
-              // Add signer field initial values
-              fieldsRef.current.signer?.forEach((f) => {
-                if (f.value !== undefined) {
-                  configValues.set(f.id, f.value);
-                  if (f.alias) configValues.set(f.alias, f.value);
-                }
-              });
-
-              // Discover fields in document
-              const discovered: Types.FieldInfo[] = tags
-                .map(({ node }: any) => ({
-                  id: node.attrs.id,
-                  alias: node.attrs.alias,
-                  label: node.attrs.alias,
-                  value:
-                    configValues.get(node.attrs.id) ??
-                    configValues.get(node.attrs.alias) ??
-                    node.textContent ??
-                    "",
-                }))
-                .filter((f: Types.FieldInfo) => f.id || f.alias); // Keep fields with at least id or alias
-
-              if (discovered.length > 0) {
-                onFieldsDiscovered?.(discovered);
-
-                // Apply initial values to document
-                fieldsRef.current.document?.forEach((field) => {
-                  if (
-                    field.value !== undefined &&
-                    superdocRef.current?.activeEditor
-                  ) {
-                    const textValue = String(field.value);
-                    if (field.id) {
-                      editor.commands.updateStructuredContentById(field.id, {
-                        text: textValue,
-                      });
-                    } else if (field.alias) {
-                      editor.commands.updateStructuredContentByAlias(
-                        field.alias,
-                        { text: textValue },
-                      );
-                    }
-                  }
-                });
-
-                // Apply signer field initial values if any
-                fieldsRef.current.signer?.forEach((field) => {
-                  if (field.value !== undefined) {
-                    const textValue = String(field.value);
-                    editor.commands.updateStructuredContentById(field.id, {
-                      text: textValue,
-                    });
-                  }
-                });
-              }
+              discoverAndApplyFields(instance.activeEditor);
             }
-
             addAuditEvent({ type: "ready" });
             setIsReady(true);
           },
@@ -182,7 +178,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
           superdocRef.current = null;
         }
       };
-    }, [document.source, document.mode, onFieldsDiscovered]); // Removed function dependency
+    }, [document.source, document.mode, discoverAndApplyFields]);
 
     // Track scroll manually
     useEffect(() => {
@@ -213,7 +209,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
 
     // Handle field change from signer inputs
     const handleFieldChange = useCallback(
-      (fieldId: string, value: any) => {
+      (fieldId: string, value: Types.FieldValue) => {
         setFieldValues((prev) => {
           const previousValue = prev.get(fieldId);
           const newMap = new Map(prev);
@@ -250,32 +246,26 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       [onFieldChange, updateFieldInDocument],
     );
 
-    // Validate form
+    // Check if form is valid
+    const checkIsValid = useCallback((): boolean => {
+      // Check scroll requirement
+      if (document.displayOptions?.scrollRequired && !scrolled) {
+        return false;
+      }
+
+      // Check required fields
+      return (fields.signer || []).every((field) => {
+        if (!field.validation?.required) return true;
+        const value = fieldValues.get(field.id);
+        return value && (typeof value !== "string" || value.trim());
+      });
+    }, [scrolled, fields.signer, fieldValues, document.displayOptions]);
+
+    // Validate form and notify state changes
     useEffect(() => {
-      const checkValidity = () => {
-        // Check scroll requirement
-        if (document.displayOptions?.scrollRequired && !scrolled) {
-          return false;
-        }
-
-        // Check required fields
-        const signerFields = fields.signer || [];
-        for (const field of signerFields) {
-          if (field.validation?.required) {
-            const value = fieldValues.get(field.id);
-            if (!value || (typeof value === "string" && !value.trim())) {
-              return false;
-            }
-          }
-        }
-
-        return true;
-      };
-
-      const valid = checkValidity();
+      const valid = checkIsValid();
       setIsValid(valid);
 
-      // Notify state change
       const state: Types.SigningState = {
         scrolled,
         fields: fieldValues,
@@ -283,14 +273,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         isSubmitting,
       };
       onStateChange?.(state);
-    }, [
-      scrolled,
-      fieldValues,
-      fields.signer,
-      document.displayOptions,
-      isSubmitting,
-      onStateChange,
-    ]);
+    }, [scrolled, fieldValues, isSubmitting, checkIsValid, onStateChange]);
 
     // Handle download
     const handleDownload = useCallback(async () => {
@@ -330,7 +313,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         signerFields: (fields.signer || []).map((field) => ({
           id: field.id,
           alias: field.alias,
-          value: fieldValues.get(field.id),
+          value: fieldValues.get(field.id) ?? null,
         })),
         isFullyCompleted: isValid,
       };
@@ -358,9 +341,9 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       return (
         <Component
           key={field.id}
-          value={fieldValues.get(field.id)}
+          value={fieldValues.get(field.id) ?? null}
           onChange={(value) => handleFieldChange(field.id, value)}
-          isDisabled={isDisabled} //|| Boolean(document.displayOptions?.scrollRequired && !scrolled)
+          isDisabled={isDisabled}
           label={field.label}
         />
       );
@@ -380,10 +363,33 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       }
     };
 
-    // Create button components
-    const DownloadButton =
-      download?.component || createDownloadButton(download);
-    const SubmitButton = submit?.component || createSubmitButton(submit);
+    // Render action buttons
+    const renderActionButtons = () => {
+      const DownloadButton =
+        download?.component || createDownloadButton(download);
+      const SubmitButton = submit?.component || createSubmitButton(submit);
+
+      return (
+        <div
+          className="superdoc-esign-actions"
+          style={{ display: "flex", gap: "10px" }}
+        >
+          {document.mode !== "download" && (
+            <SubmitButton
+              onClick={handleSubmit}
+              isValid={isValid}
+              isDisabled={isDisabled}
+              isSubmitting={isSubmitting}
+            />
+          )}
+          <DownloadButton
+            onClick={handleDownload}
+            fileName={download?.fileName}
+            isDisabled={isDisabled}
+          />
+        </div>
+      );
+    };
 
     // Expose methods via ref
     useImperativeHandle(ref, () => ({
@@ -428,24 +434,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
           )}
 
           {/* Action buttons */}
-          <div
-            className="superdoc-esign-actions"
-            style={{ display: "flex", gap: "10px" }}
-          >
-            {document.mode !== "download" && (
-              <SubmitButton
-                onClick={handleSubmit}
-                isValid={isValid}
-                isDisabled={isDisabled}
-                isSubmitting={isSubmitting}
-              />
-            )}
-            <DownloadButton
-              onClick={handleDownload}
-              fileName={download?.fileName}
-              isDisabled={isDisabled}
-            />
-          </div>
+          {renderActionButtons()}
         </div>
       </div>
     );

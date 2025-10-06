@@ -1,19 +1,21 @@
 import type { SuperDoc } from "superdoc"; // eslint-disable-line
 
+export type FieldValue = string | boolean | number | null | undefined;
+
 export interface FieldReference {
   id?: string;
   alias?: string;
 }
 
 export interface DocumentField extends FieldReference {
-  value: any;
+  value: FieldValue;
 }
 
 export interface SignerField extends FieldReference {
   id: string;
   type: "signature" | "consent" | "checkbox" | "text";
   label?: string;
-  value?: any;
+  value?: FieldValue;
   validation?: {
     required?: boolean;
     minLength?: number;
@@ -24,8 +26,8 @@ export interface SignerField extends FieldReference {
 }
 
 export interface FieldComponentProps {
-  value: any;
-  onChange: (value: any) => void;
+  value: FieldValue;
+  onChange: (value: FieldValue) => void;
   isDisabled: boolean;
   isValid?: boolean;
   label?: string;
@@ -90,7 +92,7 @@ export interface SuperDocESignProps {
 
 export interface SigningState {
   scrolled: boolean;
-  fields: Map<string, any>;
+  fields: Map<string, FieldValue>;
   isValid: boolean;
   isSubmitting: boolean;
 }
@@ -108,15 +110,15 @@ export interface SubmitData {
 export interface AuditEvent {
   timestamp: string;
   type: "ready" | "scroll" | "field_change" | "submit";
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export type FieldInfo = DocumentField & { label?: string };
 export type FieldUpdate = DocumentField;
-export type FieldChange = DocumentField & { previousValue?: any };
+export type FieldChange = DocumentField & { previousValue?: FieldValue };
 
 export interface SignerFieldValue {
   id: string;
   alias?: string;
-  value: any;
+  value: FieldValue;
 }

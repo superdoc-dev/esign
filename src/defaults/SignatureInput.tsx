@@ -7,12 +7,13 @@ export const SignatureInput: React.FC<FieldComponentProps> = ({
   isDisabled,
   label,
 }) => {
+  const stringValue = value == null ? "" : String(value);
   return (
     <div className="superdoc-esign-signature-input">
       {label && <label>{label}</label>}
       <input
         type="text"
-        value={value || ""}
+        value={stringValue}
         onChange={(e) => onChange(e.target.value)}
         disabled={isDisabled}
         placeholder="Type your full name"

@@ -14,7 +14,7 @@ export const ConsentCheckbox: React.FC<FieldComponentProps> = ({
     >
       <input
         type="checkbox"
-        checked={value || false}
+        checked={Boolean(value)}
         onChange={(e) => onChange(e.target.checked)}
         disabled={isDisabled}
       />
