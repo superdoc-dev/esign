@@ -66,19 +66,25 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         (f) => f.id === field.id || f.alias === field.alias,
       );
 
-      // Signatures always come as data URLs, everything else is text
-      const updatePayload =
-        signerField?.type === "signature" && field.value
-          ? {
-              json: {
-                type: "image",
-                attrs: {
-                  src: field.value,
-                  alt: "Signature",
-                },
-              },
-            }
-          : { text: String(field.value ?? "") };
+      let updatePayload;
+
+      // For signature fields, always convert to image regardless of input
+      if (signerField?.type === "signature" && field.value) {
+        const imageUrl =
+          typeof field.value === "string" &&
+          field.value.startsWith("data:image/")
+            ? field.value // Already an image
+            : textToImageDataUrl(String(field.value)); // Convert text to image
+
+        updatePayload = {
+          json: {
+            type: "image",
+            attrs: { src: imageUrl, alt: "Signature" },
+          },
+        };
+      } else {
+        updatePayload = { text: String(field.value ?? "") };
+      }
 
       if (field.alias) {
         editor.commands.updateStructuredContentByAlias(
@@ -87,6 +93,24 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         );
       }
     }, []);
+
+    // Synchronous helper function
+    function textToImageDataUrl(text: string): string {
+      const canvas = globalThis.document.createElement("canvas");
+      canvas.width = 300;
+      canvas.height = 80;
+      const ctx = canvas.getContext("2d")!;
+
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "italic 30px cursive";
+      ctx.fillStyle = "black";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+      return canvas.toDataURL();
+    }
 
     // Discover fields in document and apply initial values
     const discoverAndApplyFields = useCallback(
