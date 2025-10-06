@@ -115,6 +115,7 @@ export function App() {
                             signer: [
                                 {
                                     id: 'signature',
+                                    alias: 'signature',
                                     type: 'signature',
                                     label: 'Your Signature',
                                     validation: { required: true }

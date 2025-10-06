@@ -60,19 +60,31 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
 
     const updateFieldInDocument = useCallback((field: Types.FieldUpdate) => {
       if (!superdocRef.current?.activeEditor) return;
-
       const editor = superdocRef.current.activeEditor;
-      const textValue = String(field.value ?? "");
 
-      if (field.id) {
-        editor.commands.updateStructuredContentById(field.id, {
-          text: textValue,
-        });
-      }
+      const signerField = fieldsRef.current.signer?.find(
+        (f) => f.id === field.id || f.alias === field.alias,
+      );
+
+      // Signatures always come as data URLs, everything else is text
+      const updatePayload =
+        signerField?.type === "signature" && field.value
+          ? {
+              json: {
+                type: "image",
+                attrs: {
+                  src: field.value,
+                  alt: "Signature",
+                },
+              },
+            }
+          : { text: String(field.value ?? "") };
+
       if (field.alias) {
-        editor.commands.updateStructuredContentByAlias(field.alias, {
-          text: textValue,
-        });
+        editor.commands.updateStructuredContentByAlias(
+          field.alias,
+          updatePayload,
+        );
       }
     }, []);
 
