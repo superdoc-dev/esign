@@ -11,14 +11,11 @@ export interface DocumentField extends FieldReference {
 }
 
 export interface SignerField extends FieldReference {
-  type: "signature" | "consent" | "checkbox" | "text";
+  type: "signature" | "checkbox" | "text";
   label?: string;
   value?: FieldValue;
   validation?: {
     required?: boolean;
-    minLength?: number;
-    maxLength?: number;
-    pattern?: RegExp;
   };
   component?: React.ComponentType<FieldComponentProps>;
 }

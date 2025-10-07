@@ -1,7 +1,7 @@
 import React from "react";
 import type { FieldComponentProps } from "../types";
 
-export const ConsentCheckbox: React.FC<FieldComponentProps> = ({
+export const CheckboxInput: React.FC<FieldComponentProps> = ({
   value,
   onChange,
   isDisabled,
@@ -9,7 +9,7 @@ export const ConsentCheckbox: React.FC<FieldComponentProps> = ({
 }) => {
   return (
     <label
-      className="superdoc-esign-consent-checkbox"
+      className="superdoc-esign-checkbox-input"
       style={{ display: "flex", gap: "8px" }}
     >
       <input

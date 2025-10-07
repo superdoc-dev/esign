@@ -50,7 +50,7 @@ function App() {
           },
           {
             id: 'accept_terms',
-            type: 'consent',
+            type: 'checkbox',
             validation: { required: true },
             label: 'I accept the terms'
           }

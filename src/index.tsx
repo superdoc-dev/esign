@@ -10,13 +10,13 @@ import type { SuperDoc } from "superdoc";
 import type * as Types from "./types";
 import {
   SignatureInput,
-  ConsentCheckbox,
+  CheckboxInput,
   createDownloadButton,
   createSubmitButton,
 } from "./defaults";
 
 export * from "./types";
-export { SignatureInput, ConsentCheckbox };
+export { SignatureInput, CheckboxInput };
 
 type Editor = NonNullable<SuperDoc["activeEditor"]>;
 
@@ -361,15 +361,14 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
     };
 
     const getDefaultComponent = (
-      type: "signature" | "consent" | "checkbox" | "text",
+      type: "signature" | "checkbox" | "text",
     ) => {
       switch (type) {
         case "signature":
         case "text":
           return SignatureInput;
-        case "consent":
         case "checkbox":
-          return ConsentCheckbox;
+          return CheckboxInput;
       }
     };
 

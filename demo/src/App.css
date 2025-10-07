@@ -107,20 +107,20 @@ header p {
     border-color: #007aff;
 }
 
-.consent-box {
+.checkbox-input {
     padding: 1rem;
     background: #f5f5f7;
     border-radius: 8px;
 }
 
-.consent-box label {
+.checkbox-input label {
     display: flex;
     align-items: center;
     font-weight: normal;
     cursor: pointer;
 }
 
-.consent-box input[type="checkbox"] {
+.checkbox-input input[type="checkbox"] {
     width: 20px;
     height: 20px;
     margin-right: 0.75rem;
@@ -293,13 +293,13 @@ small {
     border-radius: 0 0 8px 8px;
 }
 
-.consent-list {
+.checkbox-list {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
 }
 
-.consent-item {
+.checkbox-item {
     display: flex;
     align-items: center;
     padding: 1rem;
@@ -308,7 +308,7 @@ small {
     cursor: pointer;
 }
 
-.consent-item input {
+.checkbox-item input {
     width: 20px;
     height: 20px;
     margin-right: 0.75rem;

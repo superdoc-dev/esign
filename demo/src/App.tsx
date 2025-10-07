@@ -121,7 +121,7 @@ export function App() {
                                 },
                                 {
                                     id: 'terms',
-                                    type: 'consent',
+                                    type: 'checkbox',
                                     label: 'I accept the terms and conditions',
                                     validation: { required: true }
                                 }
