@@ -1,3 +1,16 @@
+# [1.1.0](https://github.com/superdoc-dev/esign/compare/v1.0.1...v1.1.0) (2025-10-07)
+
+
+### Bug Fixes
+
+* update @types/react and @types/react-dom to latest versions ([68cf44c](https://github.com/superdoc-dev/esign/commit/68cf44cdfdb5cc21365304b688c6abb01a830837))
+* update license to AGPL-3.0 and fix workflow for syncing stable releases to main ([b0a60d0](https://github.com/superdoc-dev/esign/commit/b0a60d028730a974c3b708192aec2ac38c5fa0fc))
+
+
+### Features
+
+* add GitHub Actions workflow to sync patches to main branch ([af02010](https://github.com/superdoc-dev/esign/commit/af02010619ba804efdf7ae4a2c4f5a63de96f720))
+
 ## [1.0.1](https://github.com/superdoc-dev/esign/compare/v1.0.0...v1.0.1) (2025-10-07)
 
 
