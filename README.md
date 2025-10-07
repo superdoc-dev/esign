@@ -31,15 +31,18 @@ function App() {
       eventId={`session-${Date.now()}`}
       
       document={{
-        source: "https://storage.googleapis.com/public_static_hosting/public_demo_docs/employment_agreement.docx",
+        source: "https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement.docx",
         validation: { scroll: { required: true } }
       }}
       
       fields={{
         document: [
-          { id: 'employee_name', value: 'Jane Smith' },
-          { id: 'position', value: 'Senior Engineer' },
-          { id: 'salary', value: '$120,000' }
+          { id: 'user_name', value: 'John Doe' },
+          { id: 'agreement_date', value: new Date().toLocaleDateString() },
+          { id: 'company_name', value: 'SuperDoc' },
+          { id: 'service_type', value: 'Premium' },
+          { id: 'agreement_jurisdiction', value: 'CA' },
+          { id: 'company_address', value: '123 Main St, Anytown, USA' }
         ],
         signer: [
           {
@@ -105,7 +108,7 @@ app.post('/api/sign', async (req, res) => {
 });
 ```
 
-See [Python, Ruby, and more examples](https://docs.superdoc.dev/solutions/esign/backend).
+See [Python, Node.js, and more examples](https://docs.superdoc.dev/solutions/esign/backend).
 
 ## What You Receive
 
@@ -115,10 +118,10 @@ See [Python, Ruby, and more examples](https://docs.superdoc.dev/solutions/esign/
   timestamp: "2024-01-15T10:30:00Z",
   duration: 45000,
   documentFields: [
-    { id: "employee_name", value: "Jane Smith" }
+    { id: "user_name", value: "John Doe" }
   ],
   signerFields: [
-    { id: "signature", value: "Jane Smith" },
+    { id: "signature", value: "John Doe" },
     { id: "accept_terms", value: true }
   ],
   auditTrail: [
