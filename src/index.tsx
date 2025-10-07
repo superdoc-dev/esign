@@ -294,22 +294,22 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
     const handleDownload = useCallback(async () => {
       if (isDisabled) return;
 
-      const blob = await superdocRef.current?.export({
-        exportType: ["pdf"],
-        isFinalDoc: true,
-        triggerDownload: false,
-      });
-      if (blob && onDownload) {
-        onDownload(blob, download?.fileName || "document.pdf");
-      } else if (blob) {
-        const url = URL.createObjectURL(blob);
-        const a = globalThis.document.createElement("a");
-        a.href = url;
-        a.download = download?.fileName || "document.pdf";
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-    }, [isDisabled, download, onDownload]);
+      const downloadData: Types.DownloadData = {
+        eventId,
+        documentSource: document.source,
+        fields: {
+          document: fields.document || [],
+          signer: (fields.signer || []).map(field => ({
+            id: field.id,
+            value: fieldValues.get(field.id) ?? null,
+          })),
+        },
+        fileName: download?.fileName || "document.pdf"
+      };
+
+      await onDownload?.(downloadData);
+    }, [isDisabled, eventId, document.source, fields, fieldValues, download, onDownload]);
+
     const handleSubmit = useCallback(async () => {
       if (!isValid || isDisabled || isSubmitting) return;
 
