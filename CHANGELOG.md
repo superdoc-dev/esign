@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/superdoc-dev/esign/compare/v1.1.0...v1.1.1) (2025-10-07)
+
+
+### Bug Fixes
+
+* update package.json to include dependencies and fix README installation command ([722321b](https://github.com/superdoc-dev/esign/commit/722321bcbee9ebdaf2c481328c59cc16e105a96d))
+
 # [1.1.0](https://github.com/superdoc-dev/esign/compare/v1.0.1...v1.1.0) (2025-10-07)
 
 
