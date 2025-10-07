@@ -55,6 +55,7 @@
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
