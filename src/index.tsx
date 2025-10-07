@@ -1,4 +1,4 @@
-import React, {
+import {
   useRef,
   useState,
   useEffect,
@@ -39,7 +39,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       documentHeight = "600px",
     } = props;
 
-    // State
     const [scrolled, setScrolled] = useState(
       !document.displayOptions?.scrollRequired,
     );
@@ -51,7 +50,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
     const [auditTrail, setAuditTrail] = useState<Types.AuditEvent[]>([]);
     const [isReady, setIsReady] = useState(false);
 
-    // Refs
     const containerRef = useRef<HTMLDivElement>(null);
     const superdocRef = useRef<SuperDoc | null>(null);
     const startTimeRef = useRef(Date.now());
@@ -62,9 +60,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       if (!superdocRef.current?.activeEditor) return;
       const editor = superdocRef.current.activeEditor;
 
-      const signerField = fieldsRef.current.signer?.find(
-        (f) => f.id === field.id || f.alias === field.alias,
-      );
+      const signerField = fieldsRef.current.signer?.find((f) => f.id === field.id);
 
       let updatePayload;
 
@@ -72,7 +68,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       if (signerField?.type === "signature" && field.value) {
         const imageUrl =
           typeof field.value === "string" &&
-          field.value.startsWith("data:image/")
+            field.value.startsWith("data:image/")
             ? field.value // Already an image
             : textToImageDataUrl(String(field.value)); // Convert text to image
 
@@ -86,33 +82,45 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         updatePayload = { text: String(field.value ?? "") };
       }
 
-      if (field.alias) {
-        editor.commands.updateStructuredContentByAlias(
-          field.alias,
+      if (field.id) {
+        editor.commands.updateStructuredContentById(
+          field.id,
           updatePayload,
         );
       }
     }, []);
 
-    // Synchronous helper function
     function textToImageDataUrl(text: string): string {
       const canvas = globalThis.document.createElement("canvas");
-      canvas.width = 300;
-      canvas.height = 80;
       const ctx = canvas.getContext("2d")!;
 
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.font = "italic 30px cursive";
+      const fontSize = 30;
+      ctx.font = `italic ${fontSize}px cursive`;
+
+      const metrics = ctx.measureText(text);
+      const textWidth = metrics.width;
+
+      const estimatedHeight = fontSize * 1.3; // Cursive fonts typically need ~1.3x font size
+      const paddingX = 4;
+      const paddingY = 6; // Extra vertical padding for cursive descenders
+
+      canvas.width = Math.ceil(textWidth + paddingX * 2);
+      canvas.height = Math.ceil(estimatedHeight + paddingY * 2);
+
+      ctx.font = `italic ${fontSize}px cursive`;
       ctx.fillStyle = "black";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 
-      return canvas.toDataURL();
+      ctx.fillText(
+        text,
+        canvas.width / 2,
+        canvas.height / 2
+      );
+
+      return canvas.toDataURL("image/png");
     }
 
-    // Discover fields in document and apply initial values
     const discoverAndApplyFields = useCallback(
       (editor: Editor) => {
         if (!editor) return;
@@ -122,39 +130,32 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
             editor.state,
           );
 
-        // Build initial values map
         const configValues = new Map<string, Types.FieldValue>();
 
         fieldsRef.current.document?.forEach((f) => {
           if (f.id) configValues.set(f.id, f.value);
-          if (f.alias) configValues.set(f.alias, f.value);
         });
 
         fieldsRef.current.signer?.forEach((f) => {
           if (f.value !== undefined) {
             configValues.set(f.id, f.value);
-            if (f.alias) configValues.set(f.alias, f.value);
           }
         });
 
-        // Discover fields
         const discovered: Types.FieldInfo[] = tags
           .map(({ node }: any) => ({
             id: node.attrs.id,
-            alias: node.attrs.alias,
-            label: node.attrs.alias,
+            label: node.attrs.label,
             value:
               configValues.get(node.attrs.id) ??
-              configValues.get(node.attrs.alias) ??
               node.textContent ??
               "",
           }))
-          .filter((f: Types.FieldInfo) => f.id || f.alias);
+          .filter((f: Types.FieldInfo) => f.id);
 
         if (discovered.length > 0) {
           onFieldsDiscovered?.(discovered);
 
-          // Apply initial values from both document and signer fields
           const allFields = [
             ...(fieldsRef.current.document || []),
             ...(fieldsRef.current.signer || []),
@@ -165,7 +166,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
             .forEach((field) =>
               updateFieldInDocument({
                 id: field.id,
-                alias: field.alias,
                 value: field.value!,
               }),
             );
@@ -174,7 +174,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       [onFieldsDiscovered, updateFieldInDocument],
     );
 
-    // Add audit event
     const addAuditEvent = (event: Omit<Types.AuditEvent, "timestamp">) => {
       const auditEvent: Types.AuditEvent = {
         ...event,
@@ -216,7 +215,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       };
     }, [document.source, document.mode, discoverAndApplyFields]);
 
-    // Track scroll manually
     useEffect(() => {
       if (!document.displayOptions?.scrollRequired || !isReady) return;
 
@@ -227,7 +225,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
         const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
 
-        // Trigger at 95% or if content fits in viewport
         if (scrollPercentage >= 0.95 || scrollHeight <= clientHeight) {
           setScrolled(true);
           addAuditEvent({
@@ -238,12 +235,11 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       };
 
       scrollContainer.addEventListener("scroll", handleScroll);
-      handleScroll(); // Check initial state
+      handleScroll();
 
       return () => scrollContainer.removeEventListener("scroll", handleScroll);
     }, [document.displayOptions?.scrollRequired, isReady]);
 
-    // Handle field change from signer inputs
     const handleFieldChange = useCallback(
       (fieldId: string, value: Types.FieldValue) => {
         setFieldValues((prev) => {
@@ -251,25 +247,16 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
           const newMap = new Map(prev);
           newMap.set(fieldId, value);
 
-          // Find the field config to get alias
-          const fieldConfig = fieldsRef.current.signer?.find(
-            (f) => f.id === fieldId,
-          );
-
-          // Update in document
           updateFieldInDocument({
             id: fieldId,
-            alias: fieldConfig?.alias,
             value: value,
           });
 
-          // Add to audit trail
           addAuditEvent({
             type: "field_change",
             data: { fieldId, value, previousValue },
           });
 
-          // Notify parent
           onFieldChange?.({
             id: fieldId,
             value,
@@ -281,23 +268,17 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       },
       [onFieldChange, updateFieldInDocument],
     );
-
-    // Check if form is valid
     const checkIsValid = useCallback((): boolean => {
-      // Check scroll requirement
       if (document.displayOptions?.scrollRequired && !scrolled) {
         return false;
       }
 
-      // Check required fields
       return (fields.signer || []).every((field) => {
         if (!field.validation?.required) return true;
         const value = fieldValues.get(field.id);
         return value && (typeof value !== "string" || value.trim());
       });
     }, [scrolled, fields.signer, fieldValues, document.displayOptions]);
-
-    // Validate form and notify state changes
     useEffect(() => {
       const valid = checkIsValid();
       setIsValid(valid);
@@ -311,7 +292,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       onStateChange?.(state);
     }, [scrolled, fieldValues, isSubmitting, checkIsValid, onStateChange]);
 
-    // Handle download
     const handleDownload = useCallback(async () => {
       if (isDisabled) return;
 
@@ -323,7 +303,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       if (blob && onDownload) {
         onDownload(blob, download?.fileName || "document.pdf");
       } else if (blob) {
-        // Default download behavior
         const url = URL.createObjectURL(blob);
         const a = globalThis.document.createElement("a");
         a.href = url;
@@ -332,8 +311,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         URL.revokeObjectURL(url);
       }
     }, [isDisabled, download, onDownload]);
-
-    // Handle submit
     const handleSubmit = useCallback(async () => {
       if (!isValid || isDisabled || isSubmitting) return;
 
@@ -348,7 +325,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         documentFields: fields.document || [],
         signerFields: (fields.signer || []).map((field) => ({
           id: field.id,
-          alias: field.alias,
           value: fieldValues.get(field.id) ?? null,
         })),
         isFullyCompleted: isValid,
@@ -370,7 +346,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       onSubmit,
     ]);
 
-    // Render field
     const renderField = (field: Types.SignerField) => {
       const Component = field.component || getDefaultComponent(field.type);
 
@@ -385,7 +360,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       );
     };
 
-    // Get default component
     const getDefaultComponent = (
       type: "signature" | "consent" | "checkbox" | "text",
     ) => {
@@ -399,7 +373,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       }
     };
 
-    // Render action buttons
     const renderActionButtons = () => {
       const DownloadButton =
         download?.component || createDownloadButton(download);
@@ -427,7 +400,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       );
     };
 
-    // Expose methods via ref
     useImperativeHandle(ref, () => ({
       getState: () => ({
         scrolled,

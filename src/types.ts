@@ -3,8 +3,7 @@ import type { SuperDoc } from "superdoc"; // eslint-disable-line
 export type FieldValue = string | boolean | number | null | undefined;
 
 export interface FieldReference {
-  id?: string;
-  alias?: string;
+  id: string;
 }
 
 export interface DocumentField extends FieldReference {
@@ -12,7 +11,6 @@ export interface DocumentField extends FieldReference {
 }
 
 export interface SignerField extends FieldReference {
-  id: string;
   type: "signature" | "consent" | "checkbox" | "text";
   label?: string;
   value?: FieldValue;
@@ -119,6 +117,5 @@ export type FieldChange = DocumentField & { previousValue?: FieldValue };
 
 export interface SignerFieldValue {
   id: string;
-  alias?: string;
   value: FieldValue;
 }

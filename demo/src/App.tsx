@@ -97,7 +97,7 @@ export function App() {
                     <SuperDocESign
                         eventId={`demo-${Date.now()}`}
                         document={{
-                            source: "https://storage.googleapis.com/public_statichosting/word_documents/agreement_template.docx",
+                            source: "https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement.docx",
                             mode: 'full',
                             displayOptions: {
                                 scrollRequired: true
@@ -105,17 +105,16 @@ export function App() {
                         }}
                         fields={{
                             document: [
-                                { alias: 'userName', value: 'John Doe' },
-                                { alias: 'date', value: new Date().toLocaleDateString() },
-                                { alias: 'company', value: 'SuperDoc' },
-                                { alias: 'serviceType', value: 'Premium' },
-                                { alias: 'jurisdiction', value: 'CA' },
-                                { alias: 'companyAddress', value: '123 Main St, Anytown, USA' }
+                                { id: 'user_name', value: 'John Doe' },
+                                { id: 'agreement_date', value: new Date().toLocaleDateString() },
+                                { id: 'company_name', value: 'SuperDoc' },
+                                { id: 'service_type', value: 'Premium' },
+                                { id: 'agreement_jurisdiction', value: 'CA' },
+                                { id: 'company_address', value: '123 Main St, Anytown, USA' }
                             ],
                             signer: [
                                 {
                                     id: 'signature',
-                                    alias: 'signature',
                                     type: 'signature',
                                     label: 'Your Signature',
                                     validation: { required: true }
