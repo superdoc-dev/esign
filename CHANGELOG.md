@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/superdoc-dev/esign/compare/v1.1.2...v1.2.0) (2025-10-07)
+
+
+### Features
+
+* add download functionality for document conversion in App component ([69a9403](https://github.com/superdoc-dev/esign/commit/69a94039d52f1f1249f66f4a8881be3a83ba86c1))
+
 ## [1.1.2](https://github.com/superdoc-dev/esign/compare/v1.1.1...v1.1.2) (2025-10-07)
 
 
