@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/superdoc-dev/esign/compare/v1.0.0...v1.0.1) (2025-10-07)
+
+
+### Bug Fixes
+
+* update superdoc version and refactor consent handling ([afe3e18](https://github.com/superdoc-dev/esign/commit/afe3e18a5b101b2fae8bb4e93752c63a10f332ad))
+
 # 1.0.0 (2025-10-07)
 
 
