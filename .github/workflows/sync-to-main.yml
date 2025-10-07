@@ -1,0 +1,60 @@
+name: Sync Release to Main
+
+on:
+  push:
+    branches: [stable]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "CHANGELOG.md"
+  workflow_dispatch:
+
+jobs:
+  sync-release:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'chore(release)')
+
+    steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Sync to main
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create branch name
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-8)
+          BRANCH="sync-${SHORT_SHA}"
+
+          # Create branch from main and merge stable
+          git checkout -b "$BRANCH" origin/main
+          git fetch origin ${{ github.ref_name }}
+          git merge origin/${{ github.ref_name }} -m "chore: sync from ${{ github.ref_name }}" --no-ff
+
+          # Push and create PR
+          if git push origin "$BRANCH"; then
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "chore: sync from ${{ github.ref_name }}" \
+              --body "Syncing changes from \`${{ github.ref_name }}\` to main
+              
+              **Branch**: ${{ github.ref_name }}
+              **Commit**: [$SHORT_SHA](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+              **Message**: ${{ github.event.head_commit.message }}
+              
+              ---
+              _Auto-sync to keep main up to date_" \
+              --label "sync,automerge"
