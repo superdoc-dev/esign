@@ -19,7 +19,8 @@
         "rootDir": "src"
     },
     "include": [
-        "src"
+        "src",
+        "dev/index copy.tsx"
     ],
     "exclude": [
         "node_modules",

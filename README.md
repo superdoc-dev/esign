@@ -1,6 +1,6 @@
 # @superdoc-dev/esign
 
-A React eSignature component for SuperDoc that handles document acceptance workflows.
+React component that wraps SuperDoc for document signing workflows with audit trails and compliance tracking.
 
 ## Installation
 
@@ -11,195 +11,130 @@ npm install @superdoc-dev/esign superdoc
 ## Quick Start
 
 ```jsx
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import SuperDocESign from '@superdoc-dev/esign';
 import 'superdoc/dist/style.css';
 
 function App() {
-  const esignRef = useRef();
-  const [status, setStatus] = useState({});
-
-  const handleAccept = async () => {
-    const auditData = await esignRef.current?.accept();
-    if (auditData) {
-      // Send to your API
-      await api.saveSignature(auditData);
-    }
+  const handleSubmit = async (data) => {
+    // Send to your backend
+    await fetch('/api/sign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    alert('Document signed!');
   };
 
   return (
-    <div>
-      {/* Document viewer */}
-      <SuperDocESign
-        ref={esignRef}
-        document="https://example.com/agreement.docx"
-        requirements={{
-          scroll: true,
-          signature: true,
-          consents: ['terms', 'privacy']
-        }}
-        onChange={setStatus}
-        onAccept={handleAccept}
-      />
-
-      {/* Your signature UI */}
-      <input
-        type="text"
-        data-esign-signature
-        placeholder="Type your full name"
-        disabled={!status.scroll}
-      />
-
-      {/* Your consent UI */}
-      <label>
-        <input
-          type="checkbox"
-          data-esign-consent="terms"
-          disabled={!status.scroll || !status.signature}
-        />
-        I accept the terms
-      </label>
-
-      {/* Accept button */}
-      <button
-        onClick={() => esignRef.current?.accept()}
-        disabled={!status.isValid}
-      >
-        Accept Agreement
-      </button>
-    </div>
+    <SuperDocESign
+      eventId={`session-${Date.now()}`}
+      
+      document={{
+        source: "https://storage.googleapis.com/public_static_hosting/public_demo_docs/employment_agreement.docx",
+        validation: { scroll: { required: true } }
+      }}
+      
+      fields={{
+        document: [
+          { id: 'employee_name', value: 'Jane Smith' },
+          { id: 'position', value: 'Senior Engineer' },
+          { id: 'salary', value: '$120,000' }
+        ],
+        signer: [
+          {
+            id: 'signature',
+            type: 'signature',
+            validation: { required: true },
+            label: 'Type your full name'
+          },
+          {
+            id: 'accept_terms',
+            type: 'consent',
+            validation: { required: true },
+            label: 'I accept the terms'
+          }
+        ]
+      }}
+      
+      onSubmit={handleSubmit}
+    />
   );
 }
 ```
 
-## Props
+## Backend - Create Signed PDF
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `document` | `string \| File \| Blob` | Document to display |
-| `requirements` | `Object` | What users must complete |
-| `fields` | `Array` | Initial field values |
-| `signatureSelector` | `string` | CSS selector for signature element (default: `[data-esign-signature]`) |
-| `consentSelector` | `string` | CSS selector for consent checkboxes (default: `[data-esign-consent]`) |
-| `onChange` | `(status) => void` | Called when requirements change |
-| `onAccept` | `(data) => void` | Called when document is accepted |
-| `onReady` | `() => void` | Called when component is ready |
-| `onFieldsDiscovered` | `(fields) => void` | Called when document fields are found |
+Use the SuperDoc API to create the final signed document:
 
-## Methods (via ref)
-
-- `accept()` - Process acceptance and return audit data
-- `reset()` - Clear all state
-- `updateFields(fields)` - Update document field values
-- `getStatus()` - Get current requirement status
-- `getFields()` - Get all document fields
-
-## Requirements
-
-Configure what users must complete before accepting:
-
-```jsx
-<SuperDocESign
-  requirements={{
-    scroll: true,        // Must scroll to bottom
-    signature: true,     // Must provide signature
-    consents: ['terms', 'privacy']  // Must check these boxes
-  }}
-/>
+```javascript
+// Node.js/Express
+app.post('/api/sign', async (req, res) => {
+  const { eventId, auditTrail, documentFields, signerFields } = req.body;
+  
+  // 1. Fill document fields
+  const annotated = await fetch('https://api.superdoc.dev/v1/annotate', {
+    method: 'POST',
+    headers: { 
+      'Authorization': `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      document: 'template.docx',
+      fields: [...documentFields, ...signerFields]
+    })
+  });
+  
+  // 2. Add digital signature
+  const signed = await fetch('https://api.superdoc.dev/v1/sign', {
+    method: 'POST', 
+    headers: { 
+      'Authorization': `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      document: await annotated.blob(),
+      auditTrail: auditTrail
+    })
+  });
+  
+  // 3. Save PDF
+  await saveToStorage(await signed.blob(), `signed_${eventId}.pdf`);
+  
+  res.json({ success: true });
+});
 ```
 
-## Signature Input
+See [Python, Ruby, and more examples](https://docs.superdoc.dev/solutions/esign/backend).
 
-Use the `data-esign-signature` attribute on any input or canvas:
+## What You Receive
 
-```jsx
-{/* Text input */}
-<input type="text" data-esign-signature placeholder="Type your name" />
-
-{/* Canvas signature pad */}
-<canvas data-esign-signature width="400" height="200" />
-
-{/* Custom component */}
-<SignaturePad data-esign-signature data-signed={isSigned} />
-```
-
-## Consent Checkboxes
-
-Use the `data-esign-consent` attribute with a unique name:
-
-```jsx
-<label>
-  <input type="checkbox" data-esign-consent="terms" />
-  I accept the terms
-</label>
-
-<label>
-  <input type="checkbox" data-esign-consent="privacy" />
-  I acknowledge the privacy policy
-</label>
-```
-
-## Field Population
-
-Replace placeholders in your document with dynamic data:
-
-```jsx
-<SuperDocESign
-  fields={[
-    { alias: 'userName', value: 'John Doe' },
-    { alias: 'date', value: new Date().toLocaleDateString() },
-    { alias: 'company', value: 'Acme Inc.' }
-  ]}
-/>
-```
-
-## Audit Data
-
-When a user accepts, you receive comprehensive audit data:
-
-```typescript
+```javascript
 {
-  timestamp: "2024-01-15T10:30:00.000Z",
-  duration: 45,  // seconds spent on document
-  fields: [
-    { id: "field1", alias: "userName", value: "John Doe" }
+  eventId: "session-123",
+  timestamp: "2024-01-15T10:30:00Z",
+  duration: 45000,
+  documentFields: [
+    { id: "employee_name", value: "Jane Smith" }
   ],
-  scrolled: true,
-  signed: true,
-  consents: ["terms", "privacy"],
-  signatureImage: "data:image/png;base64,..."  // if canvas
+  signerFields: [
+    { id: "signature", value: "Jane Smith" },
+    { id: "accept_terms", value: true }
+  ],
+  auditTrail: [
+    { type: "ready", timestamp: "..." },
+    { type: "scroll", timestamp: "..." },
+    { type: "field_change", timestamp: "..." },
+    { type: "submit", timestamp: "..." }
+  ],
+  isFullyCompleted: true
 }
 ```
 
-## TypeScript
+## Documentation
 
-Full TypeScript support with exported types:
-
-```typescript
-import SuperDocESign, { 
-  SuperDocESignHandle, 
-  Status, 
-  AuditData, 
-  FieldUpdate 
-} from '@superdoc-dev/esign';
-
-const esignRef = useRef<SuperDocESignHandle>(null);
-const [status, setStatus] = useState<Status>({
-  scroll: false,
-  signature: false,
-  consents: [],
-  isValid: false
-});
-
-const handleAccept = async (data: AuditData) => {
-  // Process acceptance
-};
-```
-
-## Examples
-
-See the [examples](./examples) directory for complete implementations.
+Full docs at [docs.superdoc.dev/solutions/esign](https://docs.superdoc.dev/solutions/esign)
 
 ## License
 
-MIT
+AGPLv3
