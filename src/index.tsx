@@ -64,13 +64,12 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
 
       let updatePayload;
 
-      // For signature fields, always convert to image regardless of input
       if (signerField?.type === "signature" && field.value) {
         const imageUrl =
           typeof field.value === "string" &&
             field.value.startsWith("data:image/")
-            ? field.value // Already an image
-            : textToImageDataUrl(String(field.value)); // Convert text to image
+            ? field.value
+            : textToImageDataUrl(String(field.value));
 
         updatePayload = {
           json: {
