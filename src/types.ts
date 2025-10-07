@@ -56,16 +56,20 @@ export interface SubmitConfig {
   component?: React.ComponentType<SubmitButtonProps>;
 }
 
+export interface DocumentConfig {
+  source: string | File | Blob;
+  mode?: "full" | "download";
+  validation?: {
+    scroll?: {
+      required?: boolean;
+    };
+  };
+}
+
 export interface SuperDocESignProps {
   eventId: string;
 
-  document: {
-    source: string | File | Blob;
-    mode?: "full" | "download" | "preview";
-    displayOptions?: {
-      scrollRequired?: boolean;
-    };
-  };
+  document: DocumentConfig;
 
   fields?: {
     document?: DocumentField[];

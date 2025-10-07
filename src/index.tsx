@@ -40,7 +40,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
     } = props;
 
     const [scrolled, setScrolled] = useState(
-      !document.displayOptions?.scrollRequired,
+      !document.validation?.scroll?.required,
     );
     const [fieldValues, setFieldValues] = useState<
       Map<string, Types.FieldValue>
@@ -104,7 +104,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       const paddingX = 4;
       const paddingY = 6; // Extra vertical padding for cursive descenders
 
-      canvas.width = Math.ceil(textWidth + paddingX * 2);
+      canvas.width = Math.ceil(textWidth + paddingX * 2) + 20;
       canvas.height = Math.ceil(estimatedHeight + paddingY * 2);
 
       ctx.font = `italic ${fontSize}px cursive`;
@@ -216,7 +216,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
     }, [document.source, document.mode, discoverAndApplyFields]);
 
     useEffect(() => {
-      if (!document.displayOptions?.scrollRequired || !isReady) return;
+      if (!document.validation?.scroll?.required || !isReady) return;
 
       const scrollContainer = containerRef.current;
       if (!scrollContainer) return;
@@ -238,7 +238,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       handleScroll();
 
       return () => scrollContainer.removeEventListener("scroll", handleScroll);
-    }, [document.displayOptions?.scrollRequired, isReady]);
+    }, [document.validation?.scroll?.required, isReady]);
 
     const handleFieldChange = useCallback(
       (fieldId: string, value: Types.FieldValue) => {
@@ -269,7 +269,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       [onFieldChange, updateFieldInDocument],
     );
     const checkIsValid = useCallback((): boolean => {
-      if (document.displayOptions?.scrollRequired && !scrolled) {
+      if (document.validation?.scroll?.required && !scrolled) {
         return false;
       }
 
@@ -278,7 +278,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         const value = fieldValues.get(field.id);
         return value && (typeof value !== "string" || value.trim());
       });
-    }, [scrolled, fields.signer, fieldValues, document.displayOptions]);
+    }, [scrolled, fields.signer, fieldValues, document.validation?.scroll?.required]);
     useEffect(() => {
       const valid = checkIsValid();
       setIsValid(valid);
@@ -409,7 +409,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       }),
       getAuditTrail: () => auditTrail,
       reset: () => {
-        setScrolled(!document.displayOptions?.scrollRequired);
+        setScrolled(!document.validation?.scroll?.required);
         setFieldValues(new Map());
         setIsValid(false);
         setAuditTrail([]);

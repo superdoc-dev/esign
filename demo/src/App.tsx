@@ -99,8 +99,8 @@ export function App() {
                         document={{
                             source: "https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement.docx",
                             mode: 'full',
-                            displayOptions: {
-                                scrollRequired: true
+                            validation: {
+                                scroll: { required: true }
                             }
                         }}
                         fields={{
