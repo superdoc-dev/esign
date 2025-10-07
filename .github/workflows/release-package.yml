@@ -42,8 +42,46 @@ jobs:
       - run: pnpm build
 
       - name: Release
+        id: release
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm dlx semantic-release
+        run: |
+          pnpm dlx semantic-release
+          echo "released=$?" >> $GITHUB_OUTPUT
+
+      - name: Sync release to main
+        if: github.ref == 'refs/heads/stable' && steps.release.outputs.released == '0'
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Get the release commit (semantic-release just created it)
+          RELEASE_COMMIT=$(git rev-parse HEAD)
+
+          # Create sync branch from main
+          BRANCH="sync-release-v$(node -p "require('./package.json').version")"
+          git checkout -b "$BRANCH" origin/main
+
+          # Cherry-pick the release commit
+          if git cherry-pick "$RELEASE_COMMIT"; then
+            git push origin "$BRANCH"
+            
+            # Create PR with auto-merge
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "chore: sync v$(node -p "require('./package.json').version") from stable" \
+              --body "Syncing stable release back to main
+              
+              This PR includes:
+              - ✅ Version bump in package.json
+              - ✅ Updated CHANGELOG.md
+              
+              ---
+              _Auto-generated after stable release_" \
+              --label "release-sync,automerge"            
+          fi

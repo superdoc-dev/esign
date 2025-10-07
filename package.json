@@ -42,7 +42,7 @@
     "react"
   ],
   "author": "SuperDoc Team",
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "bugs": {
     "url": "https://github.com/superdoc-dev/esign/issues"
   },
