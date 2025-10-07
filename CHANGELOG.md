@@ -1,3 +1,12 @@
+## [1.1.2](https://github.com/superdoc-dev/esign/compare/v1.1.1...v1.1.2) (2025-10-07)
+
+
+### Bug Fixes
+
+* modify README to reflect changes in document source and field values ([7b904ee](https://github.com/superdoc-dev/esign/commit/7b904ee4cd642bbf847980fede5e0ac8a9260adf))
+* remove unused superdoc CSS import from index.tsx ([d17f61f](https://github.com/superdoc-dev/esign/commit/d17f61f9437b85e90b68b218c796d7b97466bb6f))
+* simplify rollup external dependencies and add superdoc styles ([0c0be96](https://github.com/superdoc-dev/esign/commit/0c0be96693afc2d10df9ffff8fcbc5c9838c9ad5))
+
 ## [1.1.1](https://github.com/superdoc-dev/esign/compare/v1.1.0...v1.1.1) (2025-10-07)
 
 
