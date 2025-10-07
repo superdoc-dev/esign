@@ -1,3 +1,4 @@
+import "superdoc/dist/style.css";
 import {
   useRef,
   useState,
