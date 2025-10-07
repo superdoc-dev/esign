@@ -78,7 +78,7 @@ export interface SuperDocESignProps {
 
   // Events
   onSubmit: (data: SubmitData) => void | Promise<void>;
-  onDownload?: (blob: Blob, fileName: string) => void;
+  onDownload?: (data: DownloadData) => void | Promise<void>;
   onStateChange?: (state: SigningState) => void;
   onFieldChange?: (field: FieldChange) => void;
   onFieldsDiscovered?: (fields: FieldInfo[]) => void;
@@ -94,6 +94,16 @@ export interface SigningState {
   fields: Map<string, FieldValue>;
   isValid: boolean;
   isSubmitting: boolean;
+}
+
+export interface DownloadData {
+  eventId: string;
+  documentSource: string | File | Blob;
+  fields: {
+    document: DocumentField[];
+    signer: SignerFieldValue[];
+  };
+  fileName: string;
 }
 
 export interface SubmitData {

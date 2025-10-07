@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import SuperDocESign from '@superdoc-dev/esign';
-import type { SubmitData, SigningState, FieldChange } from '@superdoc-dev/esign';
+import type { SubmitData, SigningState, FieldChange, DownloadData } from '@superdoc-dev/esign';
 import 'superdoc/dist/style.css';
 import './App.css';
 
@@ -20,6 +20,23 @@ export function App() {
         console.log('Submit data:', data);
         setSubmitted(true);
         setSubmitData(data);
+    };
+
+    const handleDownload = async (data: DownloadData) => {
+        // Send to your backend for DOCX to PDF conversion
+        const response = await fetch('/v1/convert-to-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = data.fileName;
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     const handleStateChange = (state: SigningState) => {
@@ -128,6 +145,7 @@ export function App() {
                             ]
                         }}
                         onSubmit={handleSubmit}
+                        onDownload={handleDownload}
                         onStateChange={handleStateChange}
                         onFieldChange={handleFieldChange}
                         documentHeight="500px"
