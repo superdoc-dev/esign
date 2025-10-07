@@ -5,7 +5,7 @@ React component that wraps SuperDoc for document signing workflows with audit tr
 ## Installation
 
 ```bash
-npm install @superdoc-dev/esign superdoc
+npm install @superdoc-dev/esign
 ```
 
 ## Quick Start
