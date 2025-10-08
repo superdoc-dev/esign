@@ -1,7 +1,7 @@
 import React, { createRef } from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import SuperDocESign from '../index';
 import type {
@@ -13,6 +13,72 @@ import type {
 
 import { SuperDoc } from 'superdoc';
 import { getAuditEventTypes, resetAuditEvents } from '../test/setup';
+
+const scrollListeners = new WeakMap<HTMLElement, EventListener>();
+const originalAddEventListener = HTMLElement.prototype.addEventListener;
+
+beforeAll(() => {
+  HTMLElement.prototype.addEventListener = function (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) {
+    if (type === 'scroll' && typeof listener === 'function') {
+      scrollListeners.set(this as HTMLElement, listener);
+    }
+    return originalAddEventListener.call(this, type, listener, options);
+  };
+});
+
+afterAll(() => {
+  HTMLElement.prototype.addEventListener = originalAddEventListener;
+});
+
+type ScrollMetrics = {
+  scrollTop: number;
+  scrollHeight: number;
+  clientHeight: number;
+};
+
+const configureScrollElement = (element: HTMLElement, initial: ScrollMetrics) => {
+  const metrics: ScrollMetrics = { ...initial };
+
+  Object.defineProperties(element, {
+    scrollTop: {
+      configurable: true,
+      get: () => metrics.scrollTop,
+      set: (value: number) => {
+        metrics.scrollTop = value;
+      },
+    },
+    scrollHeight: {
+      configurable: true,
+      get: () => metrics.scrollHeight,
+      set: (value: number) => {
+        metrics.scrollHeight = value;
+      },
+    },
+    clientHeight: {
+      configurable: true,
+      get: () => metrics.clientHeight,
+      set: (value: number) => {
+        metrics.clientHeight = value;
+      },
+    },
+  });
+
+  const dispatch = () => {
+    const listener = scrollListeners.get(element);
+    if (listener) {
+      listener.call(element, new Event('scroll'));
+    }
+  };
+
+  const update = (partial: Partial<ScrollMetrics>, shouldDispatch = true) => {
+    if (partial.scrollTop !== undefined) metrics.scrollTop = partial.scrollTop;
+    if (partial.scrollHeight !== undefined) metrics.scrollHeight = partial.scrollHeight;
+    if (partial.clientHeight !== undefined) metrics.clientHeight = partial.clientHeight;
+    if (shouldDispatch) dispatch();
+  };
+
+  return { update, dispatch, metrics };
+};
 
 type MockFn = ReturnType<typeof vi.fn>;
 type SuperDocMockType = (typeof SuperDoc) & {
@@ -59,45 +125,6 @@ const waitForSuperDocReady = async () => {
   });
 };
 
-const configureScrollElement = (element: HTMLElement) => {
-  let scrollHeight = 0;
-  let clientHeight = 0;
-  let scrollTop = 0;
-
-  Object.defineProperties(element, {
-    scrollHeight: {
-      configurable: true,
-      get: () => scrollHeight,
-    },
-    clientHeight: {
-      configurable: true,
-      get: () => clientHeight,
-    },
-    scrollTop: {
-      configurable: true,
-      get: () => scrollTop,
-      set: (value: number) => {
-        scrollTop = value;
-      },
-    },
-  });
-
-  return ({
-    nextScrollTop,
-    nextScrollHeight,
-    nextClientHeight,
-  }: {
-    nextScrollTop: number;
-    nextScrollHeight: number;
-    nextClientHeight: number;
-  }) => {
-    scrollHeight = nextScrollHeight;
-    clientHeight = nextClientHeight;
-    scrollTop = nextScrollTop;
-    element.dispatchEvent(new Event('scroll', { bubbles: true }));
-  };
-};
-
 beforeEach(() => {
   vi.clearAllMocks();
   superDocMock.mockGetStructuredContentTags.mockReset();
@@ -120,6 +147,7 @@ describe('SuperDocESign component', () => {
 
   it('requires scroll completion before enabling submit when validation is enforced', async () => {
     const onSubmit = vi.fn();
+    const ref = createRef<SuperDocESignHandle>();
 
     const { getByPlaceholderText, getByRole, getByTestId } = renderComponent({
       onSubmit,
@@ -138,10 +166,14 @@ describe('SuperDocESign component', () => {
           },
         ],
       },
-    });
+    }, { ref });
 
     const scrollContainer = getByTestId('superdoc-scroll-container');
-    const triggerScroll = configureScrollElement(scrollContainer);
+    const scrollController = configureScrollElement(scrollContainer, {
+      scrollHeight: 200,
+      clientHeight: 100,
+      scrollTop: 0,
+    });
 
     await waitForSuperDocReady();
 
@@ -152,12 +184,21 @@ describe('SuperDocESign component', () => {
     await waitFor(() => expect(submitButton).toBeDisabled());
 
     act(() => {
-      triggerScroll({ nextScrollHeight: 1000, nextClientHeight: 100, nextScrollTop: 950 });
+      scrollController.update({
+        scrollHeight: 1000,
+        clientHeight: 100,
+        scrollTop: 950,
+      });
     });
 
-    await waitFor(() => expect(submitButton).not.toBeDisabled());
+    await waitFor(() => {
+      const state = ref.current?.getState();
+      expect(state?.scrolled).toBe(true);
+      expect(state?.isValid).toBe(true);
+    });
 
-    await userEvent.click(submitButton);
+    const updatedSubmitButton = getByRole('button', { name: /submit/i });
+    await userEvent.click(updatedSubmitButton);
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
   });
 
@@ -234,14 +275,17 @@ describe('SuperDocESign component', () => {
     await waitFor(() => expect(ref.current).toBeTruthy());
 
     const scrollContainer = getByTestId('superdoc-scroll-container');
-    const scrollController = configureScrollElement(scrollContainer);
+    const scrollController = configureScrollElement(scrollContainer, {
+      scrollHeight: 300,
+      clientHeight: 100,
+      scrollTop: 0,
+    });
 
     const input = getByPlaceholderText('Type your full name');
     fireEvent.change(input, { target: { value: 'Audit User' } });
 
     act(() => {
-      scrollContainer.scrollTop = 250;
-      fireEvent.scroll(scrollContainer);
+      scrollController.update({ scrollTop: 250 });
     });
 
     const submitButton = getByRole('button', { name: /submit/i });
@@ -401,7 +445,11 @@ describe('SuperDocESign component', () => {
     });
 
     const scrollContainer = getByTestId('superdoc-scroll-container');
-    const scrollController = configureScrollElement(scrollContainer);
+    const scrollController = configureScrollElement(scrollContainer, {
+      scrollHeight: 400,
+      clientHeight: 100,
+      scrollTop: 0,
+    });
 
     await waitForSuperDocReady();
 
@@ -410,8 +458,7 @@ describe('SuperDocESign component', () => {
     });
 
     act(() => {
-      scrollController({ nextScrollHeight: 400, nextClientHeight: 100, nextScrollTop: 390 });
-      fireEvent.scroll(scrollContainer);
+      scrollController.update({ scrollTop: 390 });
     });
 
     const submitButton = getByRole('button', { name: /submit/i });
