@@ -16,7 +16,7 @@ export const createSubmitButton = (config?: SubmitConfig) => {
       <button
         onClick={onClick}
         disabled={!isValid || isDisabled || isSubmitting}
-        className={`superdoc-esign-btn`}
+        className={`superdoc-esign-btn superdoc-esign-btn--submit`}
         style={{
           padding: "12px 24px",
           borderRadius: "6px",

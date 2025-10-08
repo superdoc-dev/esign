@@ -9,3 +9,27 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+
+.superdoc-esign-document {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.superdoc-esign-document-toolbar {
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.superdoc-esign-document-controls {
+    justify-content: flex-end;
+}
+
+.superdoc-esign-document-viewer {
+    background: #ffffff;
+}
+
+.superdoc-esign-form-actions {
+    justify-content: flex-end;
+}
