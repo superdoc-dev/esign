@@ -120,6 +120,10 @@ export function App() {
                                 scroll: { required: true }
                             }
                         }}
+                        download={{
+                            label: 'Download PDF',
+                            fileName: 'employment-agreement.pdf'
+                        }}
                         fields={{
                             document: [
                                 { id: 'user_name', value: 'John Doe' },

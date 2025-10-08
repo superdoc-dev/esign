@@ -371,28 +371,53 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       }
     };
 
-    const renderActionButtons = () => {
+    const renderDocumentControls = () => {
+      if (download === null) {
+        return null;
+      }
+
       const DownloadButton =
         download?.component || createDownloadButton(download);
-      const SubmitButton = submit?.component || createSubmitButton(submit);
 
       return (
         <div
-          className="superdoc-esign-actions"
-          style={{ display: "flex", gap: "10px" }}
+          className="superdoc-esign-document-toolbar"
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            gap: "8px",
+            padding: "10px",
+            borderBottom: "1px solid rgba(0, 0, 0, 0.08)",
+            background: "rgba(0, 0, 0, 0.02)",
+          }}
         >
-          {document.mode !== "download" && (
-            <SubmitButton
-              onClick={handleSubmit}
-              isValid={isValid}
-              isDisabled={isDisabled}
-              isSubmitting={isSubmitting}
-            />
-          )}
           <DownloadButton
             onClick={handleDownload}
             fileName={download?.fileName}
             isDisabled={isDisabled}
+          />
+        </div>
+      );
+    };
+
+    const renderFormActions = () => {
+      if (document.mode === "download") {
+        return null;
+      }
+
+      const SubmitButton = submit?.component || createSubmitButton(submit);
+
+      return (
+        <div
+          className="superdoc-esign-actions superdoc-esign-form-actions"
+          style={{ display: "flex", gap: "10px" }}
+        >
+          <SubmitButton
+            onClick={handleSubmit}
+            isValid={isValid}
+            isDisabled={isDisabled}
+            isSubmitting={isSubmitting}
           />
         </div>
       );
@@ -421,8 +446,18 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       >
         {/* Document viewer section */}
         <div className="superdoc-esign-document">
+          {(() => {
+            const controls = renderDocumentControls();
+            if (!controls) return null;
+            return (
+              <div className="superdoc-esign-document-header">
+                {controls}
+              </div>
+            );
+          })()}
           <div
             ref={containerRef}
+            className="superdoc-esign-document-viewer"
             style={{ height: documentHeight, overflow: "auto" }}
           />
         </div>
@@ -440,7 +475,7 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
           )}
 
           {/* Action buttons */}
-          {renderActionButtons()}
+          {renderFormActions()}
         </div>
       </div>
     );

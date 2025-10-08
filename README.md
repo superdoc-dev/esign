@@ -29,12 +29,14 @@ function App() {
   return (
     <SuperDocESign
       eventId={`session-${Date.now()}`}
-      
       document={{
         source: "https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement.docx",
         validation: { scroll: { required: true } }
       }}
-      
+      download={{
+        label: "Download PDF",
+        fileName: "employment-agreement.pdf"
+      }}
       fields={{
         document: [
           { id: 'user_name', value: 'John Doe' },
@@ -59,7 +61,6 @@ function App() {
           }
         ]
       }}
-      
       onSubmit={handleSubmit}
     />
   );

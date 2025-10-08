@@ -13,7 +13,7 @@ export const createDownloadButton = (config?: DownloadConfig) => {
       <button
         onClick={onClick}
         disabled={isDisabled}
-        className={`superdoc-esign-btn`}
+        className={`superdoc-esign-btn superdoc-esign-document-control`}
         style={{
           padding: "10px 20px",
           borderRadius: "6px",
