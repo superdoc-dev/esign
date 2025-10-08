@@ -37,7 +37,7 @@ jobs:
 
       - name: Validate commits
         run: |
-          pnpm dlx commitlint \
+          pnpm exec commitlint \
             --from ${{ github.event.pull_request.base.sha }} \
             --to ${{ github.event.pull_request.head.sha }}
 
