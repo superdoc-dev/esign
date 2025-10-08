@@ -1,3 +1,11 @@
+# [1.3.0](https://github.com/superdoc-dev/esign/compare/v1.2.0...v1.3.0) (2025-10-08)
+
+
+### Features
+
+* enhance document download and UI components in app ([#1](https://github.com/superdoc-dev/esign/issues/1)) ([cab8848](https://github.com/superdoc-dev/esign/commit/cab8848b70a86453ed323413086d05dcb614d32b))
+* integrate testing framework and add test cases ([#2](https://github.com/superdoc-dev/esign/issues/2)) ([e92c73e](https://github.com/superdoc-dev/esign/commit/e92c73eab838be19c624c72289446caf38264885))
+
 # [1.2.0](https://github.com/superdoc-dev/esign/compare/v1.1.2...v1.2.0) (2025-10-07)
 
 
