@@ -17,4 +17,11 @@ export default defineConfig({
         react(),
         dts()
     ],
+    test: {
+        environment: 'jsdom',
+        setupFiles: ['./src/test/setup.ts'],
+        globals: true,
+        clearMocks: true,
+        restoreMocks: true
+    }
 });

@@ -96,6 +96,12 @@ export interface SigningState {
   isSubmitting: boolean;
 }
 
+export interface SuperDocESignHandle {
+  getState: () => SigningState;
+  getAuditTrail: () => AuditEvent[];
+  reset: () => void;
+}
+
 export interface DownloadData {
   eventId: string;
   documentSource: string | File | Blob;

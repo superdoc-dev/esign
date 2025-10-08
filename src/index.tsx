@@ -20,7 +20,7 @@ export { SignatureInput, CheckboxInput };
 
 type Editor = NonNullable<SuperDoc["activeEditor"]>;
 
-const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
+const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignProps>(
   (props, ref) => {
     const {
       eventId,
@@ -54,7 +54,12 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
     const superdocRef = useRef<SuperDoc | null>(null);
     const startTimeRef = useRef(Date.now());
     const fieldsRef = useRef(fields);
+    const auditTrailRef = useRef<Types.AuditEvent[]>([]);
     fieldsRef.current = fields;
+
+    useEffect(() => {
+      auditTrailRef.current = auditTrail;
+    }, [auditTrail]);
 
     const updateFieldInDocument = useCallback((field: Types.FieldUpdate) => {
       if (!superdocRef.current?.activeEditor) return;
@@ -173,12 +178,21 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       [onFieldsDiscovered, updateFieldInDocument],
     );
 
-    const addAuditEvent = (event: Omit<Types.AuditEvent, "timestamp">) => {
+    const addAuditEvent = (
+      event: Omit<Types.AuditEvent, "timestamp">,
+    ): Types.AuditEvent[] => {
       const auditEvent: Types.AuditEvent = {
         ...event,
         timestamp: new Date().toISOString(),
       };
-      setAuditTrail((prev) => [...prev, auditEvent]);
+      const auditMock = (globalThis as any)?.__SUPERDOC_AUDIT_MOCK__;
+      if (auditMock) {
+        auditMock(auditEvent);
+      }
+      const nextTrail = [...auditTrailRef.current, auditEvent];
+      auditTrailRef.current = nextTrail;
+      setAuditTrail(nextTrail);
+      return nextTrail;
     };
 
     // Initialize SuperDoc - ONLY ONCE per document
@@ -208,7 +222,9 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
 
       return () => {
         if (superdocRef.current) {
-          superdocRef.current.destroy();
+          if (typeof superdocRef.current.destroy === "function") {
+            superdocRef.current.destroy();
+          }
           superdocRef.current = null;
         }
       };
@@ -316,11 +332,13 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       setIsSubmitting(true);
       addAuditEvent({ type: "submit" });
 
+      const nextAuditTrail = addAuditEvent({ type: "submit" });
+
       const submitData: Types.SubmitData = {
         eventId,
         timestamp: new Date().toISOString(),
         duration: Math.floor((Date.now() - startTimeRef.current) / 1000),
-        auditTrail,
+        auditTrail: nextAuditTrail,
         documentFields: fields.document || [],
         signerFields: (fields.signer || []).map((field) => ({
           id: field.id,
@@ -339,7 +357,6 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
       isDisabled,
       isSubmitting,
       eventId,
-      auditTrail,
       fields,
       fieldValues,
       onSubmit,
@@ -405,11 +422,12 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         isValid,
         isSubmitting,
       }),
-      getAuditTrail: () => auditTrail,
+      getAuditTrail: () => auditTrailRef.current,
       reset: () => {
         setScrolled(!document.validation?.scroll?.required);
         setFieldValues(new Map());
         setIsValid(false);
+        auditTrailRef.current = [];
         setAuditTrail([]);
       },
     }));
@@ -420,20 +438,26 @@ const SuperDocESign = forwardRef<any, Types.SuperDocESignProps>(
         style={style}
       >
         {/* Document viewer section */}
-        <div className="superdoc-esign-document">
+        <div className="superdoc-esign-document" data-testid="superdoc-esign-document">
           <div
             ref={containerRef}
+            data-testid="superdoc-scroll-container"
             style={{ height: documentHeight, overflow: "auto" }}
           />
         </div>
 
         {/* Controls section - separate from document */}
-        <div className="superdoc-esign-controls" style={{ marginTop: "20px" }}>
+        <div
+          className="superdoc-esign-controls"
+          style={{ marginTop: "20px" }}
+          data-testid="superdoc-esign-controls"
+        >
           {/* Signer fields */}
           {fields.signer && fields.signer.length > 0 && (
             <div
               className="superdoc-esign-fields"
               style={{ marginBottom: "20px" }}
+              data-testid="superdoc-esign-fields"
             >
               {fields.signer.map(renderField)}
             </div>
