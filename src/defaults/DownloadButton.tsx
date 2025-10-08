@@ -13,12 +13,12 @@ export const createDownloadButton = (config?: DownloadConfig) => {
       <button
         onClick={onClick}
         disabled={isDisabled}
-        className={`superdoc-esign-btn`}
+        className={`superdoc-esign-btn superdoc-esign-btn--download`}
         style={{
-          padding: "10px 20px",
+          padding: "8px 16px",
           borderRadius: "6px",
-          border: "none",
-          background: "#fff",
+          border: "1px solid #d0d5dd",
+          background: "#ffffff",
           color: "#333",
           cursor: isDisabled ? "not-allowed" : "pointer",
           opacity: isDisabled ? 0.5 : 1,

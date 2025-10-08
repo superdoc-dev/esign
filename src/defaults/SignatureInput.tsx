@@ -8,7 +8,10 @@ export const SignatureInput: React.FC<FieldComponentProps> = ({
   label,
 }) => {
   return (
-    <div className={`superdoc-esign-signature-input`} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div
+      className={`superdoc-esign-signature-input`}
+      style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+    >
       {label && <label>{label}</label>}
       <input
         type="text"

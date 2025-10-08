@@ -111,6 +111,9 @@ export function App() {
             ) : (
                 <>
                     <h2 style={{ marginBottom: '20px' }}>Employment Agreement</h2>
+                    <p style={{ marginBottom: '16px', color: '#666' }}>
+                        Use the document toolbar to download the current agreement at any time.
+                    </p>
                     <SuperDocESign
                         eventId={`demo-${Date.now()}`}
                         document={{
@@ -144,6 +147,7 @@ export function App() {
                                 }
                             ]
                         }}
+                        download={{ label: 'Download PDF' }}
                         onSubmit={handleSubmit}
                         onDownload={handleDownload}
                         onStateChange={handleStateChange}
