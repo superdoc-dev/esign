@@ -457,6 +457,7 @@ const SuperDocESign = forwardRef<
       {/* Document viewer section */}
       <div
         className="superdoc-esign-document"
+        data-testid="superdoc-esign-document"
         style={{ display: "flex", flexDirection: "column" }}
       >
         {documentControls && (
@@ -480,6 +481,7 @@ const SuperDocESign = forwardRef<
         <div
           ref={containerRef}
           className="superdoc-esign-document-viewer"
+          data-testid="superdoc-scroll-container"
           style={{ height: documentHeight, overflow: "auto" }}
         />
       </div>
