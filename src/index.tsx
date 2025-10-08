@@ -392,32 +392,45 @@ const SuperDocESign = forwardRef<
     }
   };
 
-  const renderActionButtons = () => {
+  const renderDocumentControls = () => {
     const DownloadButton =
       download?.component || createDownloadButton(download);
+
+    if (!DownloadButton) return null;
+
+    return (
+      <DownloadButton
+        onClick={handleDownload}
+        fileName={download?.fileName}
+        isDisabled={isDisabled}
+      />
+    );
+  };
+
+  const renderFormActions = () => {
+    if (document.mode === "download") {
+      return null;
+    }
+
     const SubmitButton = submit?.component || createSubmitButton(submit);
 
     return (
       <div
-        className="superdoc-esign-actions"
+        className="superdoc-esign-actions superdoc-esign-form-actions"
         style={{ display: "flex", gap: "10px" }}
       >
-        {document.mode !== "download" && (
-          <SubmitButton
-            onClick={handleSubmit}
-            isValid={isValid}
-            isDisabled={isDisabled}
-            isSubmitting={isSubmitting}
-          />
-        )}
-        <DownloadButton
-          onClick={handleDownload}
-          fileName={download?.fileName}
+        <SubmitButton
+          onClick={handleSubmit}
+          isValid={isValid}
           isDisabled={isDisabled}
+          isSubmitting={isSubmitting}
         />
       </div>
     );
   };
+
+  const documentControls = renderDocumentControls();
+  const formActions = renderFormActions();
 
   useImperativeHandle(ref, () => ({
     getState: () => ({
@@ -445,9 +458,29 @@ const SuperDocESign = forwardRef<
       <div
         className="superdoc-esign-document"
         data-testid="superdoc-esign-document"
+        style={{ display: "flex", flexDirection: "column" }}
       >
+        {documentControls && (
+          <div
+            className="superdoc-esign-document-toolbar"
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              padding: "8px 12px",
+            }}
+          >
+            <div
+              className="superdoc-esign-document-controls"
+              style={{ display: "flex", gap: "8px" }}
+            >
+              {documentControls}
+            </div>
+          </div>
+        )}
         <div
           ref={containerRef}
+          className="superdoc-esign-document-viewer"
           data-testid="superdoc-scroll-container"
           style={{ height: documentHeight, overflow: "auto" }}
         />
@@ -471,11 +504,12 @@ const SuperDocESign = forwardRef<
         )}
 
         {/* Action buttons */}
-        {renderActionButtons()}
+        {formActions}
       </div>
     </div>
   );
-});
+},
+);
 
 SuperDocESign.displayName = "SuperDocESign";
 
