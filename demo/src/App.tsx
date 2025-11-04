@@ -144,6 +144,12 @@ export function App() {
                                     type: 'checkbox',
                                     label: 'I accept the terms and conditions',
                                     validation: { required: true }
+                                },
+                                {
+                                    id: 'email',
+                                    type: 'checkbox',
+                                    label: 'Send me a copy of the agreement',
+                                    validation: { required: false }
                                 }
                             ]
                         }}

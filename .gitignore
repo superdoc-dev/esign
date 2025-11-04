@@ -25,3 +25,4 @@ examples/**/yarn.lock
 
 # Dev
 dev/**
+CLAUDE.md
