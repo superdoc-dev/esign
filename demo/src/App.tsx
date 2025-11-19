@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SuperDocESign from '@superdoc-dev/esign';
 import type { SubmitData, SigningState, FieldChange, DownloadData } from '@superdoc-dev/esign';
-import 'superdoc/dist/style.css';
+import 'superdoc/style.css';
 import './App.css';
 
 export function App() {
@@ -144,6 +144,12 @@ export function App() {
                                     type: 'checkbox',
                                     label: 'I accept the terms and conditions',
                                     validation: { required: true }
+                                },
+                                {
+                                    id: 'email',
+                                    type: 'checkbox',
+                                    label: 'Send me a copy of the agreement',
+                                    validation: { required: false }
                                 }
                             ]
                         }}

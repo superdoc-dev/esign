@@ -508,8 +508,7 @@ const SuperDocESign = forwardRef<
       </div>
     </div>
   );
-},
-);
+});
 
 SuperDocESign.displayName = "SuperDocESign";
 

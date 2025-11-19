@@ -25,3 +25,5 @@ examples/**/yarn.lock
 
 # Dev
 dev/**
+CLAUDE.md
+/demo-crc
