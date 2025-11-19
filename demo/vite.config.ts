@@ -8,6 +8,7 @@ export default defineConfig({
     resolve: {
         alias: {
             'superdoc/dist/style.css': path.resolve(__dirname, '../node_modules/superdoc/dist/style.css')
-        }
+        },
+        dedupe: ['react', 'react-dom', 'react/jsx-runtime']
     }
 });
