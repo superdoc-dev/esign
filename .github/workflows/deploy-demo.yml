@@ -16,6 +16,9 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Generate token
         id: generate_token
@@ -41,8 +44,10 @@ jobs:
       - name: Install and Build
         run: |
           pnpm install
+          rm -rf dist
           pnpm build
           cd demo
+          rm -rf node_modules dist
           pnpm install
           pnpm build
 
@@ -52,4 +57,5 @@ jobs:
           path: ./demo/dist
 
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
