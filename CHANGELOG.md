@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/superdoc-dev/esign/compare/v1.3.0...v1.3.1) (2025-11-19)
+
+
+### Bug Fixes
+
+* correct syntax error in SuperDocESign component and update external dependencies in Vite config ([#3](https://github.com/superdoc-dev/esign/issues/3)) ([69d5636](https://github.com/superdoc-dev/esign/commit/69d56369a19d15c640dde80f8d697d39b27ad3d5))
+
 # [1.3.0](https://github.com/superdoc-dev/esign/compare/v1.2.0...v1.3.0) (2025-10-08)
 
 
