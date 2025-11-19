@@ -10,7 +10,7 @@ export default defineConfig({
             fileName: (format) => (format === 'es' ? 'index.mjs' : 'index.js'),
         },
         rollupOptions: {
-            external: ['react', 'react-dom'],
+            external: ['react', 'react-dom', 'superdoc'],
         },
     },
     plugins: [

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SuperDocESign from '@superdoc-dev/esign';
 import type { SubmitData, SigningState, FieldChange, DownloadData } from '@superdoc-dev/esign';
-import 'superdoc/dist/style.css';
+import 'superdoc/style.css';
 import './App.css';
 
 export function App() {
