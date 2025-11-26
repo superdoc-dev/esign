@@ -192,15 +192,22 @@ const SuperDocESign = forwardRef<
   useEffect(() => {
     if (!containerRef.current) return;
 
+    let aborted = false;
+    let instance: SuperDoc | null = null;
+
     const initSuperDoc = async () => {
       const { SuperDoc } = await import("superdoc");
 
-      const instance = new SuperDoc({
+      // If cleanup ran while we were importing, abort
+      if (aborted) return;
+
+      instance = new SuperDoc({
         selector: containerRef.current!,
         document: document.source,
         documentMode: "viewing",
         onReady: () => {
-          if (instance.activeEditor) {
+          if (aborted) return;
+          if (instance?.activeEditor) {
             discoverAndApplyFields(instance.activeEditor);
           }
           addAuditEvent({ type: "ready" });
@@ -214,14 +221,16 @@ const SuperDocESign = forwardRef<
     initSuperDoc();
 
     return () => {
-      if (superdocRef.current) {
-        if (typeof superdocRef.current.destroy === "function") {
-          superdocRef.current.destroy();
+      aborted = true;
+      if (instance) {
+        if (typeof instance.destroy === "function") {
+          instance.destroy();
         }
-        superdocRef.current = null;
       }
+      superdocRef.current = null;
     };
-  }, [document.source, document.mode, discoverAndApplyFields]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [document.source, document.mode]);
 
   useEffect(() => {
     if (!document.validation?.scroll?.required || !isReady) return;
