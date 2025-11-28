@@ -444,8 +444,11 @@ header {
    eSign Component Customization via CSS Variables
    =========================================== */
 
-/* Example: Customize the controls area */
+/* Example: Customize the eSign component */
 .superdoc-esign-container {
+    /* Document viewer background */
+    --superdoc-esign-document-background: #f9fafb;
+
     /* Remove the gap between viewer and controls */
     --superdoc-esign-controls-gap: 0;
 

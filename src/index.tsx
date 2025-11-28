@@ -485,7 +485,12 @@ const SuperDocESign = forwardRef<
           ref={containerRef}
           className="superdoc-esign-document-viewer"
           data-testid="superdoc-scroll-container"
-          style={{ height: documentHeight, overflow: "auto" }}
+          style={{
+            height: documentHeight,
+            overflow: "auto",
+            backgroundColor:
+              "var(--superdoc-esign-document-background, transparent)",
+          }}
         />
       </div>
 
