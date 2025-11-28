@@ -439,3 +439,25 @@ header {
         gap: 1.5rem;
     }
 }
+
+/* ===========================================
+   eSign Component Customization via CSS Variables
+   =========================================== */
+
+/* Example: Customize the controls area */
+.superdoc-esign-container {
+    /* Remove the gap between viewer and controls */
+    --superdoc-esign-controls-gap: 0;
+
+    /* Style the controls area */
+    --superdoc-esign-controls-padding: 16px 20px;
+    --superdoc-esign-controls-background: #f9fafb;
+    --superdoc-esign-controls-border-top: 1px solid #e5e7eb;
+    --superdoc-esign-controls-border-radius: 0 0 12px 12px;
+
+    /* Adjust spacing between fields and actions */
+    --superdoc-esign-fields-gap: 16px;
+
+    /* Adjust gap between action buttons */
+    --superdoc-esign-actions-gap: 12px;
+}
