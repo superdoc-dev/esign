@@ -417,7 +417,10 @@ const SuperDocESign = forwardRef<
     return (
       <div
         className="superdoc-esign-actions superdoc-esign-form-actions"
-        style={{ display: "flex", gap: "10px" }}
+        style={{
+          display: "flex",
+          gap: "var(--superdoc-esign-actions-gap, 10px)",
+        }}
       >
         <SubmitButton
           onClick={handleSubmit}
@@ -489,14 +492,21 @@ const SuperDocESign = forwardRef<
       {/* Controls section - separate from document */}
       <div
         className="superdoc-esign-controls"
-        style={{ marginTop: "20px" }}
+        style={{
+          marginTop: "var(--superdoc-esign-controls-gap, 20px)",
+          padding: "var(--superdoc-esign-controls-padding, 0)",
+          backgroundColor:
+            "var(--superdoc-esign-controls-background, transparent)",
+          borderTop: "var(--superdoc-esign-controls-border-top, none)",
+          borderRadius: "var(--superdoc-esign-controls-border-radius, 0)",
+        }}
         data-testid="superdoc-esign-controls"
       >
         {/* Signer fields */}
         {fields.signer && fields.signer.length > 0 && (
           <div
             className="superdoc-esign-fields"
-            style={{ marginBottom: "20px" }}
+            style={{ marginBottom: "var(--superdoc-esign-fields-gap, 20px)" }}
             data-testid="superdoc-esign-fields"
           >
             {fields.signer.map(renderField)}
