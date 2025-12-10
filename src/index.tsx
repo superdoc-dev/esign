@@ -57,7 +57,9 @@ const SuperDocESign = forwardRef<
   const startTimeRef = useRef(Date.now());
   const fieldsRef = useRef(fields);
   const auditTrailRef = useRef<Types.AuditEvent[]>([]);
+  const onFieldsDiscoveredRef = useRef(onFieldsDiscovered);
   fieldsRef.current = fields;
+  onFieldsDiscoveredRef.current = onFieldsDiscovered;
 
   useEffect(() => {
     auditTrailRef.current = auditTrail;
@@ -151,7 +153,7 @@ const SuperDocESign = forwardRef<
         .filter((f: Types.FieldInfo) => f.id);
 
       if (discovered.length > 0) {
-        onFieldsDiscovered?.(discovered);
+        onFieldsDiscoveredRef.current?.(discovered);
 
         const allFields = [
           ...(fieldsRef.current.document || []),
@@ -168,7 +170,7 @@ const SuperDocESign = forwardRef<
           );
       }
     },
-    [onFieldsDiscovered, updateFieldInDocument],
+    [updateFieldInDocument],
   );
 
   const addAuditEvent = (
@@ -188,19 +190,28 @@ const SuperDocESign = forwardRef<
     return nextTrail;
   };
 
-  // Initialize SuperDoc - ONLY ONCE per document
+  // Initialize SuperDoc - uses abort pattern to handle React 18 Strict Mode
+  // which intentionally double-invokes effects to help identify cleanup issues
   useEffect(() => {
     if (!containerRef.current) return;
+
+    let aborted = false;
+    let instance: SuperDoc | null = null;
 
     const initSuperDoc = async () => {
       const { SuperDoc } = await import("superdoc");
 
-      const instance = new SuperDoc({
+      // If cleanup ran while we were importing, abort
+      if (aborted) return;
+
+      instance = new SuperDoc({
         selector: containerRef.current!,
         document: document.source,
         documentMode: "viewing",
         onReady: () => {
-          if (instance.activeEditor) {
+          // Guard callback execution if cleanup already ran
+          if (aborted) return;
+          if (instance?.activeEditor) {
             discoverAndApplyFields(instance.activeEditor);
           }
           addAuditEvent({ type: "ready" });
@@ -214,12 +225,13 @@ const SuperDocESign = forwardRef<
     initSuperDoc();
 
     return () => {
-      if (superdocRef.current) {
-        if (typeof superdocRef.current.destroy === "function") {
-          superdocRef.current.destroy();
+      aborted = true;
+      if (instance) {
+        if (typeof instance.destroy === "function") {
+          instance.destroy();
         }
-        superdocRef.current = null;
       }
+      superdocRef.current = null;
     };
   }, [document.source, document.mode, discoverAndApplyFields]);
 
