@@ -190,6 +190,9 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
           selector: containerRef.current!,
           document: document.source,
           documentMode: 'viewing',
+          modules: {
+            comments: false,
+          },
           onReady: () => {
             // Guard callback execution if cleanup already ran
             if (aborted) return;
