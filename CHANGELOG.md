@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/superdoc-dev/esign/compare/v1.4.0...v1.4.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* force release ([dc2a6d3](https://github.com/superdoc-dev/esign/commit/dc2a6d3d4fc26c7c94a45195f6246f8b331079b8))
+
 # [1.4.0](https://github.com/superdoc-dev/esign/compare/v1.3.1...v1.4.0) (2025-12-11)
 
 
