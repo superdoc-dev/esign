@@ -1,4 +1,4 @@
-import type { SuperDoc } from "superdoc"; // eslint-disable-line
+import type { SuperDoc } from 'superdoc'; // eslint-disable-line
 
 export type FieldValue = string | boolean | number | null | undefined;
 
@@ -11,7 +11,7 @@ export interface DocumentField extends FieldReference {
 }
 
 export interface SignerField extends FieldReference {
-  type: "signature" | "checkbox" | "text";
+  type: 'signature' | 'checkbox' | 'text';
   label?: string;
   value?: FieldValue;
   validation?: {
@@ -55,7 +55,7 @@ export interface SubmitConfig {
 
 export interface DocumentConfig {
   source: string | File | Blob;
-  mode?: "full" | "download";
+  mode?: 'full' | 'download';
   validation?: {
     scroll?: {
       required?: boolean;
@@ -124,7 +124,7 @@ export interface SubmitData {
 
 export interface AuditEvent {
   timestamp: string;
-  type: "ready" | "scroll" | "field_change" | "submit";
+  type: 'ready' | 'scroll' | 'field_change' | 'submit';
   data?: Record<string, unknown>;
 }
 

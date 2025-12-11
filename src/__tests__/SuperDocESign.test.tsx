@@ -1,32 +1,18 @@
-import React, { createRef } from "react";
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-} from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import {
-  beforeAll,
-  afterAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import React, { createRef } from 'react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeAll, afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import SuperDocESign from "../index";
+import SuperDocESign from '../index';
 import type {
   FieldComponentProps,
   SuperDocESignHandle,
   SuperDocESignProps,
   AuditEvent,
-} from "../types";
+} from '../types';
 
-import { SuperDoc } from "superdoc";
-import { getAuditEventTypes, resetAuditEvents } from "../test/setup";
+import { SuperDoc } from 'superdoc';
+import { getAuditEventTypes, resetAuditEvents } from '../test/setup';
 
 const scrollListeners = new WeakMap<HTMLElement, EventListener>();
 const originalAddEventListener = HTMLElement.prototype.addEventListener;
@@ -37,7 +23,7 @@ beforeAll(() => {
     listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions,
   ) {
-    if (type === "scroll" && typeof listener === "function") {
+    if (type === 'scroll' && typeof listener === 'function') {
       scrollListeners.set(this as HTMLElement, listener);
     }
     return originalAddEventListener.call(this, type, listener, options);
@@ -54,10 +40,7 @@ type ScrollMetrics = {
   clientHeight: number;
 };
 
-const configureScrollElement = (
-  element: HTMLElement,
-  initial: ScrollMetrics,
-) => {
+const configureScrollElement = (element: HTMLElement, initial: ScrollMetrics) => {
   const metrics: ScrollMetrics = { ...initial };
 
   Object.defineProperties(element, {
@@ -87,16 +70,14 @@ const configureScrollElement = (
   const dispatch = () => {
     const listener = scrollListeners.get(element);
     if (listener) {
-      listener.call(element, new Event("scroll"));
+      listener.call(element, new Event('scroll'));
     }
   };
 
   const update = (partial: Partial<ScrollMetrics>, shouldDispatch = true) => {
     if (partial.scrollTop !== undefined) metrics.scrollTop = partial.scrollTop;
-    if (partial.scrollHeight !== undefined)
-      metrics.scrollHeight = partial.scrollHeight;
-    if (partial.clientHeight !== undefined)
-      metrics.clientHeight = partial.clientHeight;
+    if (partial.scrollHeight !== undefined) metrics.scrollHeight = partial.scrollHeight;
+    if (partial.clientHeight !== undefined) metrics.clientHeight = partial.clientHeight;
     if (shouldDispatch) dispatch();
   };
 
@@ -112,9 +93,9 @@ type SuperDocMockType = typeof SuperDoc & {
 
 const superDocMock = SuperDoc as unknown as SuperDocMockType;
 
-const baseDocument: SuperDocESignProps["document"] = {
-  source: "<p>Test Document</p>",
-  mode: "full",
+const baseDocument: SuperDocESignProps['document'] = {
+  source: '<p>Test Document</p>',
+  mode: 'full',
   validation: {
     scroll: {
       required: false,
@@ -129,7 +110,7 @@ const renderComponent = (
   const { document: customDocument, ...restProps } = props;
 
   const mergedProps: SuperDocESignProps = {
-    eventId: "evt_test",
+    eventId: 'evt_test',
     fields: {},
     onSubmit: vi.fn(),
     ...restProps,
@@ -157,20 +138,18 @@ beforeEach(() => {
   resetAuditEvents();
 });
 
-describe("SuperDocESign component", () => {
-  it("renders with minimum required props", async () => {
+describe('SuperDocESign component', () => {
+  it('renders with minimum required props', async () => {
     renderComponent();
 
     await waitForSuperDocReady();
 
-    expect(screen.getByTestId("superdoc-esign-document")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /submit/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /download/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('superdoc-esign-document')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /download/i })).toBeInTheDocument();
   });
 
-  it("requires scroll completion before enabling submit when validation is enforced", async () => {
+  it('requires scroll completion before enabling submit when validation is enforced', async () => {
     const onSubmit = vi.fn();
     const ref = createRef<SuperDocESignHandle>();
 
@@ -178,16 +157,16 @@ describe("SuperDocESign component", () => {
       {
         onSubmit,
         document: {
-          source: "<p>Scroll document</p>",
-          mode: "full",
+          source: '<p>Scroll document</p>',
+          mode: 'full',
           validation: { scroll: { required: true } },
         },
         fields: {
           signer: [
             {
-              id: "sig-1",
-              type: "signature",
-              label: "Signature",
+              id: 'sig-1',
+              type: 'signature',
+              label: 'Signature',
               validation: { required: true },
             },
           ],
@@ -196,7 +175,7 @@ describe("SuperDocESign component", () => {
       { ref },
     );
 
-    const scrollContainer = getByTestId("superdoc-scroll-container");
+    const scrollContainer = getByTestId('superdoc-scroll-container');
     const scrollController = configureScrollElement(scrollContainer, {
       scrollHeight: 200,
       clientHeight: 100,
@@ -205,9 +184,9 @@ describe("SuperDocESign component", () => {
 
     await waitForSuperDocReady();
 
-    const submitButton = getByRole("button", { name: /submit/i });
-    const input = getByPlaceholderText("Type your full name");
-    fireEvent.change(input, { target: { value: "Jane Doe" } });
+    const submitButton = getByRole('button', { name: /submit/i });
+    const input = getByPlaceholderText('Type your full name');
+    fireEvent.change(input, { target: { value: 'Jane Doe' } });
 
     await waitFor(() => expect(submitButton).toBeDisabled());
 
@@ -225,12 +204,12 @@ describe("SuperDocESign component", () => {
       expect(state?.isValid).toBe(true);
     });
 
-    const updatedSubmitButton = getByRole("button", { name: /submit/i });
+    const updatedSubmitButton = getByRole('button', { name: /submit/i });
     await userEvent.click(updatedSubmitButton);
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
   });
 
-  it("invokes field and state change callbacks and updates SuperDoc document", async () => {
+  it('invokes field and state change callbacks and updates SuperDoc document', async () => {
     const onFieldChange = vi.fn();
     const onStateChange = vi.fn();
 
@@ -240,9 +219,9 @@ describe("SuperDocESign component", () => {
       fields: {
         signer: [
           {
-            id: "sig-field",
-            type: "signature",
-            label: "Signature",
+            id: 'sig-field',
+            type: 'signature',
+            label: 'Signature',
             validation: { required: true },
           },
         ],
@@ -251,8 +230,8 @@ describe("SuperDocESign component", () => {
 
     await waitForSuperDocReady();
 
-    const input = getByPlaceholderText("Type your full name");
-    fireEvent.change(input, { target: { value: "John Doe" } });
+    const input = getByPlaceholderText('Type your full name');
+    fireEvent.change(input, { target: { value: 'John Doe' } });
 
     await waitFor(() => {
       expect(onFieldChange).toHaveBeenCalled();
@@ -261,15 +240,15 @@ describe("SuperDocESign component", () => {
 
     const lastFieldChange = onFieldChange.mock.calls.at(-1)?.[0];
     expect(lastFieldChange).toMatchObject({
-      id: "sig-field",
-      value: "John Doe",
+      id: 'sig-field',
+      value: 'John Doe',
     });
 
     const lastState = onStateChange.mock.calls.at(-1)?.[0];
-    expect(lastState?.fields.get("sig-field")).toBe("John Doe");
+    expect(lastState?.fields.get('sig-field')).toBe('John Doe');
 
     expect(superDocMock.mockUpdateStructuredContentById).toHaveBeenCalledWith(
-      "sig-field",
+      'sig-field',
       expect.objectContaining({
         json: expect.objectContaining({
           attrs: expect.objectContaining({ src: expect.any(String) }),
@@ -278,22 +257,22 @@ describe("SuperDocESign component", () => {
     );
   });
 
-  it("tracks audit trail and exposes ref methods", async () => {
+  it('tracks audit trail and exposes ref methods', async () => {
     const ref = createRef<SuperDocESignHandle>();
 
     const { getByPlaceholderText, getByRole, getByTestId } = renderComponent(
       {
         document: {
-          source: "<p>Scroll doc</p>",
-          mode: "full",
+          source: '<p>Scroll doc</p>',
+          mode: 'full',
           validation: { scroll: { required: true } },
         },
         fields: {
           signer: [
             {
-              id: "sig-field",
-              type: "signature",
-              label: "Signature",
+              id: 'sig-field',
+              type: 'signature',
+              label: 'Signature',
               validation: { required: true },
             },
           ],
@@ -305,21 +284,21 @@ describe("SuperDocESign component", () => {
     await waitForSuperDocReady();
     await waitFor(() => expect(ref.current).toBeTruthy());
 
-    const scrollContainer = getByTestId("superdoc-scroll-container");
+    const scrollContainer = getByTestId('superdoc-scroll-container');
     const scrollController = configureScrollElement(scrollContainer, {
       scrollHeight: 300,
       clientHeight: 100,
       scrollTop: 0,
     });
 
-    const input = getByPlaceholderText("Type your full name");
-    fireEvent.change(input, { target: { value: "Audit User" } });
+    const input = getByPlaceholderText('Type your full name');
+    fireEvent.change(input, { target: { value: 'Audit User' } });
 
     act(() => {
       scrollController.update({ scrollTop: 250 });
     });
 
-    const submitButton = getByRole("button", { name: /submit/i });
+    const submitButton = getByRole('button', { name: /submit/i });
     await waitFor(() => expect(submitButton).not.toBeDisabled(), {
       timeout: 2000,
     });
@@ -332,15 +311,13 @@ describe("SuperDocESign component", () => {
 
     const auditTrail = ref.current?.getAuditTrail() ?? [];
     const types = auditTrail.map((event) => event.type);
-    expect(types[0]).toBe("ready");
-    expect(types).to.include("field_change");
-    expect(
-      types.filter((type) => type === "scroll").length,
-    ).toBeGreaterThanOrEqual(1);
-    expect(types).to.include("submit");
+    expect(types[0]).toBe('ready');
+    expect(types).to.include('field_change');
+    expect(types.filter((type) => type === 'scroll').length).toBeGreaterThanOrEqual(1);
+    expect(types).to.include('submit');
 
     auditTrail.forEach((event: AuditEvent) => {
-      expect(typeof event.timestamp).toBe("string");
+      expect(typeof event.timestamp).toBe('string');
       expect(Number.isNaN(new Date(event.timestamp).getTime())).toBe(false);
     });
 
@@ -350,7 +327,7 @@ describe("SuperDocESign component", () => {
       isValid: true,
       isSubmitting: false,
     });
-    expect(stateBeforeReset?.fields.get("sig-field")).toBe("Audit User");
+    expect(stateBeforeReset?.fields.get('sig-field')).toBe('Audit User');
 
     act(() => {
       ref.current?.reset();
@@ -365,17 +342,14 @@ describe("SuperDocESign component", () => {
     expect(ref.current?.getAuditTrail()).toEqual([]);
   });
 
-  it("prefers custom components when provided", async () => {
+  it('prefers custom components when provided', async () => {
     const onSubmit = vi.fn();
     const onDownload = vi.fn();
 
-    const CustomField: React.FC<FieldComponentProps> = ({
-      onChange,
-      label,
-    }) => (
+    const CustomField: React.FC<FieldComponentProps> = ({ onChange, label }) => (
       <div>
         <span>{label}</span>
-        <button type="button" onClick={() => onChange("custom-value")}>
+        <button type="button" onClick={() => onChange('custom-value')}>
           Set Custom Value
         </button>
       </div>
@@ -407,9 +381,9 @@ describe("SuperDocESign component", () => {
       fields: {
         signer: [
           {
-            id: "custom-field",
-            type: "text",
-            label: "Custom Field",
+            id: 'custom-field',
+            type: 'text',
+            label: 'Custom Field',
             component: CustomField,
             validation: { required: true },
           },
@@ -426,63 +400,61 @@ describe("SuperDocESign component", () => {
     await waitFor(() => expect(superDocMock).toHaveBeenCalled());
     await waitForSuperDocReady();
 
-    expect(screen.getByText("Custom Field")).toBeInTheDocument();
-    expect(
-      screen.queryByPlaceholderText("Type your full name"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText('Custom Field')).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Type your full name')).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByText("Set Custom Value"));
+    await userEvent.click(screen.getByText('Set Custom Value'));
 
-    const submitButton = screen.getByRole("button", { name: "Send It" });
+    const submitButton = screen.getByRole('button', { name: 'Send It' });
     await waitFor(() => expect(submitButton).not.toBeDisabled());
     await userEvent.click(submitButton);
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
 
-    const downloadButton = screen.getByRole("button", { name: "Grab Copy" });
+    const downloadButton = screen.getByRole('button', { name: 'Grab Copy' });
     expect(downloadButton).toBeEnabled();
     await userEvent.click(downloadButton);
     await waitFor(() => expect(onDownload).toHaveBeenCalledTimes(1));
 
     const downloadPayload = onDownload.mock.calls.at(0)?.[0];
     expect(downloadPayload).toMatchObject({
-      eventId: "evt_test",
+      eventId: 'evt_test',
       fields: {
-        signer: [{ id: "custom-field", value: "custom-value" }],
+        signer: [{ id: 'custom-field', value: 'custom-value' }],
       },
-      fileName: "document.pdf",
+      fileName: 'document.pdf',
     });
   });
 
-  it("generates submit payload with expected structure and audit trail", async () => {
+  it('generates submit payload with expected structure and audit trail', async () => {
     const onSubmit = vi.fn();
 
     const { getByPlaceholderText, getByRole, getByTestId } = renderComponent({
       onSubmit,
       document: {
-        source: "<p>Full payload doc</p>",
-        mode: "full",
+        source: '<p>Full payload doc</p>',
+        mode: 'full',
         validation: { scroll: { required: true } },
       },
       fields: {
         document: [
           {
-            id: "doc-field",
-            value: "Document Value",
+            id: 'doc-field',
+            value: 'Document Value',
           },
         ],
         signer: [
           {
-            id: "sig-field",
-            type: "signature",
-            label: "Signature",
+            id: 'sig-field',
+            type: 'signature',
+            label: 'Signature',
             validation: { required: true },
           },
         ],
       },
     });
 
-    const scrollContainer = getByTestId("superdoc-scroll-container");
+    const scrollContainer = getByTestId('superdoc-scroll-container');
     const scrollController = configureScrollElement(scrollContainer, {
       scrollHeight: 400,
       clientHeight: 100,
@@ -491,15 +463,15 @@ describe("SuperDocESign component", () => {
 
     await waitForSuperDocReady();
 
-    fireEvent.change(getByPlaceholderText("Type your full name"), {
-      target: { value: "Payload User" },
+    fireEvent.change(getByPlaceholderText('Type your full name'), {
+      target: { value: 'Payload User' },
     });
 
     act(() => {
       scrollController.update({ scrollTop: 390 });
     });
 
-    const submitButton = getByRole("button", { name: /submit/i });
+    const submitButton = getByRole('button', { name: /submit/i });
     await waitFor(() => expect(submitButton).not.toBeDisabled());
     await userEvent.click(submitButton);
 
@@ -507,28 +479,22 @@ describe("SuperDocESign component", () => {
 
     await waitFor(() => {
       const types = getAuditEventTypes();
-      expect(types).to.include("submit");
+      expect(types).to.include('submit');
     });
 
     const submitData = onSubmit.mock.calls[0][0];
-    expect(submitData.eventId).toBe("evt_test");
-    expect(typeof submitData.timestamp).toBe("string");
+    expect(submitData.eventId).toBe('evt_test');
+    expect(typeof submitData.timestamp).toBe('string');
     expect(Number.isNaN(new Date(submitData.timestamp).getTime())).toBe(false);
-    expect(typeof submitData.duration).toBe("number");
+    expect(typeof submitData.duration).toBe('number');
     expect(submitData.isFullyCompleted).toBe(true);
 
-    expect(submitData.documentFields).toEqual([
-      { id: "doc-field", value: "Document Value" },
-    ]);
+    expect(submitData.documentFields).toEqual([{ id: 'doc-field', value: 'Document Value' }]);
 
-    expect(submitData.signerFields).toEqual([
-      { id: "sig-field", value: "Payload User" },
-    ]);
+    expect(submitData.signerFields).toEqual([{ id: 'sig-field', value: 'Payload User' }]);
 
-    const auditTypes = submitData.auditTrail.map(
-      (event: AuditEvent) => event.type,
-    );
-    expect(auditTypes).to.include.members(["ready", "field_change"]);
-    expect(auditTypes).to.include("submit");
+    const auditTypes = submitData.auditTrail.map((event: AuditEvent) => event.type);
+    expect(auditTypes).to.include.members(['ready', 'field_change']);
+    expect(auditTypes).to.include('submit');
   });
 });
