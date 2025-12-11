@@ -1,5 +1,5 @@
-import React from "react";
-import type { FieldComponentProps } from "../types";
+import React from 'react';
+import type { FieldComponentProps } from '../types';
 
 export const CheckboxInput: React.FC<FieldComponentProps> = ({
   value,
@@ -8,10 +8,7 @@ export const CheckboxInput: React.FC<FieldComponentProps> = ({
   label,
 }) => {
   return (
-    <label
-      className="superdoc-esign-checkbox-input"
-      style={{ display: "flex", gap: "8px" }}
-    >
+    <label className="superdoc-esign-checkbox-input" style={{ display: 'flex', gap: '8px' }}>
       <input
         type="checkbox"
         checked={Boolean(value)}
