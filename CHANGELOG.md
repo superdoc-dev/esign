@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/superdoc-dev/esign/compare/v1.4.1...v1.4.2) (2025-12-11)
+
+
+### Bug Fixes
+
+* add electronic-signature keyword for discoverability ([9ecf1a3](https://github.com/superdoc-dev/esign/commit/9ecf1a308ea4ea4f4184634089d49fa4a896ed69))
+
 ## [1.4.1](https://github.com/superdoc-dev/esign/compare/v1.4.0...v1.4.1) (2025-12-11)
 
 
