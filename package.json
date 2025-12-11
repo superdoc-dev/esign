@@ -74,17 +74,17 @@
     "eslint-plugin-react-hooks": "^6.1.0",
     "husky": "^9.1.7",
     "jsdom": "^27.0.0",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.6.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "semantic-release": "^24.2.9",
-    "superdoc": "^0.29.0",
+    "superdoc": "^0.35.3",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.1",
     "vite": "^7.1.7",
     "vite-plugin-dts": "^4.5.4",
-    "vitest": "^3.2.4",
-    "lint-staged": "^16.2.7"
+    "vitest": "^3.2.4"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
