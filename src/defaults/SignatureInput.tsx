@@ -1,5 +1,5 @@
-import React from "react";
-import type { FieldComponentProps } from "../types";
+import React from 'react';
+import type { FieldComponentProps } from '../types';
 
 export const SignatureInput: React.FC<FieldComponentProps> = ({
   value,
@@ -10,18 +10,18 @@ export const SignatureInput: React.FC<FieldComponentProps> = ({
   return (
     <div
       className={`superdoc-esign-signature-input`}
-      style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
     >
       {label && <label>{label}</label>}
       <input
         type="text"
-        value={String(value || "")}
+        value={String(value || '')}
         onChange={(e) => onChange(e.target.value)}
         disabled={isDisabled}
         placeholder="Type your full name"
         style={{
-          fontFamily: "cursive",
-          fontSize: "18px",
+          fontFamily: 'cursive',
+          fontSize: '18px',
         }}
       />
     </div>
