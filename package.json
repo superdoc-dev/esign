@@ -21,13 +21,15 @@
     "dev": "vite build --watch",
     "build": "tsc && vite build",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx",
-    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "lint": "eslint src demo",
+    "lint:fix": "eslint src demo --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"demo/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"demo/**/*.{ts,tsx}\"",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "prepare": "husky",
     "release": "semantic-release",
-    "check:all": "pnpm run type-check && pnpm run lint && pnpm run format"
+    "check:all": "pnpm run format:check && pnpm run lint && pnpm run type-check && pnpm run build"
   },
   "repository": {
     "type": "git",
@@ -81,7 +83,14 @@
     "typescript-eslint": "^8.44.1",
     "vite": "^7.1.7",
     "vite-plugin-dts": "^4.5.4",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "lint-staged": "^16.2.7"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   },
   "publishConfig": {
     "access": "public"

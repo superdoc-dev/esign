@@ -1,1 +1,1 @@
-pnpm type-check && pnpm lint
+pnpm lint-staged && pnpm type-check && pnpm build

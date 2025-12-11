@@ -1,5 +1,5 @@
-import React from "react";
-import type { SubmitButtonProps, SubmitConfig } from "../types";
+import React from 'react';
+import type { SubmitButtonProps, SubmitConfig } from '../types';
 
 export const createSubmitButton = (config?: SubmitConfig) => {
   const Component: React.FC<SubmitButtonProps> = ({
@@ -9,7 +9,7 @@ export const createSubmitButton = (config?: SubmitConfig) => {
     isSubmitting,
   }) => {
     const getLabel = () => {
-      return config?.label || "Submit";
+      return config?.label || 'Submit';
     };
 
     return (
@@ -18,15 +18,15 @@ export const createSubmitButton = (config?: SubmitConfig) => {
         disabled={!isValid || isDisabled || isSubmitting}
         className={`superdoc-esign-btn superdoc-esign-btn--submit`}
         style={{
-          padding: "12px 24px",
-          borderRadius: "6px",
-          border: "none",
-          background: "#007bff",
-          color: "#fff",
-          cursor: !isValid || isDisabled ? "not-allowed" : "pointer",
+          padding: '12px 24px',
+          borderRadius: '6px',
+          border: 'none',
+          background: '#007bff',
+          color: '#fff',
+          cursor: !isValid || isDisabled ? 'not-allowed' : 'pointer',
           opacity: !isValid || isDisabled ? 0.5 : 1,
-          fontSize: "16px",
-          fontWeight: "bold",
+          fontSize: '16px',
+          fontWeight: 'bold',
         }}
       >
         {getLabel()}
