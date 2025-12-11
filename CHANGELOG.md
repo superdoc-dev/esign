@@ -1,3 +1,19 @@
+# [1.4.0](https://github.com/superdoc-dev/esign/compare/v1.3.1...v1.4.0) (2025-12-11)
+
+
+### Bug Fixes
+
+* add 'react/jsx-runtime' to external dependencies in Vite config ([f05380f](https://github.com/superdoc-dev/esign/commit/f05380f5543d22cc6e781622b7b7e87306e9939f))
+* disable comments module + sd update ([#8](https://github.com/superdoc-dev/esign/issues/8)) ([b9ac704](https://github.com/superdoc-dev/esign/commit/b9ac704a8a0179d31b7e8a3721ad05faea817d91))
+* React 18 Strict Mode compatibility for SuperDoc initialization ([#7](https://github.com/superdoc-dev/esign/issues/7)) ([488eed8](https://github.com/superdoc-dev/esign/commit/488eed86bde04e5a20bdbdc55b4729c93527cf35))
+* restore React dedupe to prevent duplicate instance errors ([3fc8f99](https://github.com/superdoc-dev/esign/commit/3fc8f99dda514eb7a774fa6dbb89ebced1ccbaf3))
+* update GitHub Actions workflow to correctly set environment variables and clean up build artifacts ([a1eba5b](https://github.com/superdoc-dev/esign/commit/a1eba5bd4ef771ad55dbfa661c94150f845d0f5e))
+
+
+### Features
+
+* background color css ([#6](https://github.com/superdoc-dev/esign/issues/6)) ([73c2862](https://github.com/superdoc-dev/esign/commit/73c28621da75a9c4d9891fb959f015b38c8b59d5))
+
 ## [1.3.1](https://github.com/superdoc-dev/esign/compare/v1.3.0...v1.3.1) (2025-11-19)
 
 
