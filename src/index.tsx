@@ -390,10 +390,7 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
       const SubmitButton = submit?.component || createSubmitButton(submit);
 
       return (
-        <div
-          className="superdoc-esign-actions superdoc-esign-form-actions"
-          style={{ display: 'flex', gap: '10px' }}
-        >
+        <div className="superdoc-esign-actions superdoc-esign-form-actions">
           <SubmitButton
             onClick={handleSubmit}
             isValid={isValid}
@@ -427,27 +424,10 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
     return (
       <div className={`superdoc-esign-container ${className || ''}`} style={style}>
         {/* Document viewer section */}
-        <div
-          className="superdoc-esign-document"
-          data-testid="superdoc-esign-document"
-          style={{ display: 'flex', flexDirection: 'column' }}
-        >
+        <div className="superdoc-esign-document" data-testid="superdoc-esign-document">
           {documentControls && (
-            <div
-              className="superdoc-esign-document-toolbar"
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'center',
-                padding: '8px 12px',
-              }}
-            >
-              <div
-                className="superdoc-esign-document-controls"
-                style={{ display: 'flex', gap: '8px' }}
-              >
-                {documentControls}
-              </div>
+            <div className="superdoc-esign-document-toolbar">
+              <div className="superdoc-esign-document-controls">{documentControls}</div>
             </div>
           )}
           <div
@@ -459,18 +439,10 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
         </div>
 
         {/* Controls section - separate from document */}
-        <div
-          className="superdoc-esign-controls"
-          style={{ marginTop: '20px' }}
-          data-testid="superdoc-esign-controls"
-        >
+        <div className="superdoc-esign-controls" data-testid="superdoc-esign-controls">
           {/* Signer fields */}
           {fields.signer && fields.signer.length > 0 && (
-            <div
-              className="superdoc-esign-fields"
-              style={{ marginBottom: '20px' }}
-              data-testid="superdoc-esign-fields"
-            >
+            <div className="superdoc-esign-fields" data-testid="superdoc-esign-fields">
               {fields.signer.map(renderField)}
             </div>
           )}
