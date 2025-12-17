@@ -245,7 +245,7 @@ export function App() {
               type: isDrawnSignature ? 'signature' : 'text',
               options: {
                 bottomLabel: {
-                  text: `ip: ${field.value}`,
+                  text: 'ip: 127.0.0.1',
                   color: '#666',
                 },
               },
