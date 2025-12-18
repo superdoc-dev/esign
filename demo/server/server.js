@@ -7,11 +7,17 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const SUPERDOC_SERVICES_API_KEY = process.env.SUPERDOC_SERVICES_API_KEY;
-const SUPERDOC_SERVICES_BASE_URL = process.env.SUPERDOC_SERVICES_BASE_URL || 'https://api.superdoc.dev';
+const SUPERDOC_SERVICES_BASE_URL =
+  process.env.SUPERDOC_SERVICES_BASE_URL || 'https://api.superdoc.dev';
 const CONSENT_FIELD_IDS = new Set(['consent_agreement', 'terms', 'email', '406948812']);
 const SIGNATURE_FIELD_ID = '789012';
 
-app.use(cors());
+// TODO: tighten origin allowlist when the frontend URL is known.
+app.use(
+  cors({
+    origin: 'https://esign.superdoc.dev',
+  }),
+);
 app.use(express.json({ limit: '50mb' }));
 
 app.get('/health', (req, res) => {

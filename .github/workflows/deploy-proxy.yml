@@ -8,11 +8,11 @@ on:
         required: false
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: ${{ secrets.GCP_REGION }}
-  SERVICE_NAME: ${{ secrets.GCP_SERVICE_NAME }}
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REGION: ${{ vars.GCP_REGION }}
+  SERVICE_NAME: ${{ vars.GCP_SERVICE_NAME }}
   SUPERDOC_SERVICES_API_KEY: ${{ secrets.SUPERDOC_SERVICES_API_KEY }}
-  SUPERDOC_SERVICES_BASE_URL: ${{ secrets.SUPERDOC_SERVICES_BASE_URL }}
+  SUPERDOC_SERVICES_BASE_URL: ${{ vars.SUPERDOC_SERVICES_BASE_URL }}
 
 jobs:
   deploy:
@@ -61,9 +61,11 @@ jobs:
           gcloud run deploy "${SERVICE_NAME}" \
             --image "${IMAGE}" \
             --region "${REGION}" \
-            --platform managed \
+            --memory=1Gi \
+            --cpu=1 \
             --allow-unauthenticated \
-            --set-env-vars SUPERDOC_SERVICES_API_KEY="${SUPERDOC_SERVICES_API_KEY}",SUPERDOC_SERVICES_BASE_URL="${SUPERDOC_SERVICES_BASE_URL}"
+            --set-env-vars SUPERDOC_SERVICES_BASE_URL="${SUPERDOC_SERVICES_BASE_URL}" \
+            --set-secrets="SUPERDOC_SERVICES_API_KEY=esign-demo-sd-services-api-key:latest"
         env:
           IMAGE: ${{ env.IMAGE }}
           REGION: ${{ env.REGION }}

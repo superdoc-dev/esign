@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     proxy: {
       '/v1': {
-        target: 'http://localhost:3003',
+        target: 'https://esign-demo-proxy-server-191591660773.us-central1.run.app',
         changeOrigin: true,
         secure: false,
       },
