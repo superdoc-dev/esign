@@ -24,5 +24,18 @@ export default [
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn'
     }
+  },
+  {
+    files: ['demo/server/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        fetch: 'readonly'
+      }
+    },
+    env: {
+      node: true
+    }
   }
 ];
