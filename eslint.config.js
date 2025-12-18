@@ -31,11 +31,17 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
-        fetch: 'readonly'
+        fetch: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        console: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setImmediate: 'readonly',
+        global: 'readonly'
       }
-    },
-    env: {
-      node: true
     }
   }
 ];
