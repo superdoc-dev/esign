@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import SuperDocESign from '@superdoc-dev/esign';
 import type {
   SubmitData,
@@ -6,11 +6,24 @@ import type {
   FieldChange,
   DownloadData,
   SuperDocESignHandle,
-  FieldComponentProps,
 } from '@superdoc-dev/esign';
-import SignaturePad from 'signature_pad';
+import CustomSignature from './CustomSignature';
 import 'superdoc/style.css';
 import './App.css';
+
+const documentSource =
+  'https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement_updated.docx';
+
+// Helper to download a response blob as a file
+const downloadBlob = async (response: Response, fileName: string) => {
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
 // Document field definitions with labels
 const documentFieldsConfig = [
@@ -46,148 +59,6 @@ const documentFieldsConfig = [
   },
 ];
 
-// Custom signature component with type/draw modes using signature_pad
-const CustomSignature: React.FC<FieldComponentProps> = ({ value, onChange, isDisabled, label }) => {
-  const [mode, setMode] = useState<'type' | 'draw'>('type');
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const signaturePadRef = useRef<SignaturePad | null>(null);
-
-  const switchMode = (newMode: 'type' | 'draw') => {
-    setMode(newMode);
-    onChange('');
-    if (newMode === 'draw' && signaturePadRef.current) {
-      signaturePadRef.current.clear();
-    }
-  };
-
-  const clearCanvas = () => {
-    if (signaturePadRef.current) {
-      signaturePadRef.current.clear();
-      onChange('');
-    }
-  };
-
-  useEffect(() => {
-    if (!canvasRef.current || mode !== 'draw') return;
-
-    signaturePadRef.current = new SignaturePad(canvasRef.current, {
-      backgroundColor: 'rgb(255, 255, 255)',
-      penColor: 'rgb(0, 0, 0)',
-    });
-
-    if (isDisabled) {
-      signaturePadRef.current.off();
-    }
-
-    signaturePadRef.current.addEventListener('endStroke', () => {
-      if (signaturePadRef.current) {
-        onChange(signaturePadRef.current.toDataURL());
-      }
-    });
-
-    return () => {
-      if (signaturePadRef.current) {
-        signaturePadRef.current.off();
-      }
-    };
-  }, [mode, isDisabled, onChange]);
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {label && (
-        <label style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937' }}>{label}</label>
-      )}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
-        <button
-          type="button"
-          onClick={() => switchMode('type')}
-          disabled={isDisabled}
-          style={{
-            padding: '6px 12px',
-            background: mode === 'type' ? '#14b8a6' : 'white',
-            color: mode === 'type' ? 'white' : '#374151',
-            border: '1px solid #d1d5db',
-            borderRadius: '6px',
-            fontSize: '13px',
-            cursor: isDisabled ? 'not-allowed' : 'pointer',
-          }}
-        >
-          Type
-        </button>
-        <button
-          type="button"
-          onClick={() => switchMode('draw')}
-          disabled={isDisabled}
-          style={{
-            padding: '6px 12px',
-            background: mode === 'draw' ? '#14b8a6' : 'white',
-            color: mode === 'draw' ? 'white' : '#374151',
-            border: '1px solid #d1d5db',
-            borderRadius: '6px',
-            fontSize: '13px',
-            cursor: isDisabled ? 'not-allowed' : 'pointer',
-          }}
-        >
-          Draw
-        </button>
-      </div>
-      {mode === 'type' ? (
-        <input
-          type="text"
-          value={String(value || '')}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={isDisabled}
-          placeholder="Type your full name"
-          style={{
-            fontFamily: 'cursive',
-            fontSize: '20px',
-            padding: '14px',
-            border: '1px solid #d1d5db',
-            borderRadius: '8px',
-            outline: 'none',
-            transition: 'border-color 0.2s',
-          }}
-          onFocus={(e) => (e.target.style.borderColor = '#14b8a6')}
-          onBlur={(e) => (e.target.style.borderColor = '#d1d5db')}
-        />
-      ) : (
-        <div>
-          <canvas
-            ref={canvasRef}
-            width={500}
-            height={150}
-            style={{
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              cursor: isDisabled ? 'not-allowed' : 'crosshair',
-              background: 'white',
-              width: '100%',
-              height: '150px',
-            }}
-          />
-          <button
-            type="button"
-            onClick={clearCanvas}
-            disabled={isDisabled}
-            style={{
-              marginTop: '8px',
-              padding: '6px 12px',
-              background: 'white',
-              color: '#374151',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              fontSize: '13px',
-              cursor: isDisabled ? 'not-allowed' : 'pointer',
-            }}
-          >
-            Clear
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
 export function App() {
   const [submitted, setSubmitted] = useState(false);
   const [submitData, setSubmitData] = useState<SubmitData | null>(null);
@@ -219,120 +90,37 @@ export function App() {
     log('⏳ Signing document...');
     console.log('Submit data:', data);
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    const bearerToken = import.meta.env.VITE_SUPERDOC_SERVICES_API_KEY;
-    if (bearerToken) {
-      headers.Authorization = `Bearer ${bearerToken}`;
-    }
-
     try {
-      // Step 1: Prepare fields for annotation
-      const fields = [...data.documentFields, ...data.signerFields]
-        .filter(
-          (field) =>
-            field.id !== 'consent_agreement' && field.id !== 'terms' && field.id !== 'email',
-        )
-        .map((field) => {
-          // Signature field: add options with IP label
-          if (field.id === '789012') {
-            const isDrawnSignature =
-              typeof field.value === 'string' && field.value?.startsWith('data:image/');
-            return {
-              id: field.id,
-              value: field.value,
-              type: isDrawnSignature ? 'signature' : 'text',
-              options: {
-                bottomLabel: {
-                  text: 'ip: 127.0.0.1',
-                  color: '#666',
-                },
-              },
-            };
-          }
-          // Document fields
-          const docField = documentFieldsConfig.find((f) => f.id === field.id);
-          return {
-            id: field.id,
-            value: field.value,
-            type: docField?.type || 'text',
-          };
-        });
-
-      // Step 2: Annotate the document
-      log('⏳ Annotating document...');
-      const annotateResponse = await fetch('/v1/annotate', {
+      const response = await fetch('/v1/sign', {
         method: 'POST',
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          document: {
-            url: 'https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement_updated.docx',
+          document: { url: documentSource },
+          documentFields: data.documentFields,
+          signerFields: data.signerFields,
+          auditTrail: data.auditTrail,
+          eventId: data.eventId,
+          signer: {
+            name: documentFields['234567'] || 'Signer',
+            email: 'andrii@superdoc.dev',
+            ip: '127.0.0.1',
+            userAgent: navigator.userAgent,
           },
-          fields,
+          certificate: { enable: true },
+          metadata: {
+            company: documentFields['345678'],
+            plan: documentFields['456789'],
+          },
+          fileName: `signed_agreement_${data.eventId}.pdf`,
         }),
       });
 
-      if (!annotateResponse.ok) {
-        const error = await annotateResponse.text();
-        throw new Error(error || 'Failed to annotate document');
-      }
-
-      const annotateResult = await annotateResponse.json();
-      const annotatedBase64 = annotateResult.document.base64;
-
-      // Step 3: Sign the annotated document
-      log('⏳ Applying digital signature...');
-      const signPayload = {
-        eventId: data.eventId,
-        document: {
-          base64: annotatedBase64,
-        },
-        auditTrail: data.auditTrail,
-        signer: {
-          name: documentFields['234567'] || 'Signer', // Full Name field
-          email: 'andrii@superdoc.dev',
-          ip: '127.0.0.1',
-          userAgent: navigator.userAgent,
-        },
-        certificate: {
-          enable: true,
-        },
-        metadata: {
-          company: documentFields['345678'],
-          plan: documentFields['456789'],
-        },
-      };
-
-      const signResponse = await fetch('/v1/sign', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(signPayload),
-      });
-
-      if (!signResponse.ok) {
-        const error = await signResponse.text();
+      if (!response.ok) {
+        const error = await response.text();
         throw new Error(error || 'Failed to sign document');
       }
 
-      const signResult = await signResponse.json();
-      const { base64: signedBase64 } = signResult.document;
-
-      // Step 4: Download the signed PDF
-      const byteCharacters = atob(signedBase64);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: 'application/pdf' });
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `signed_agreement_${data.eventId}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await downloadBlob(response, `signed_agreement_${data.eventId}.pdf`);
 
       log('✓ Document signed and downloaded!');
       setSubmitted(true);
@@ -344,50 +132,19 @@ export function App() {
   };
 
   const handleDownload = async (data: DownloadData) => {
-    if (typeof data.documentSource !== 'string') {
-      log('Download requires a document URL.');
-      return;
-    }
-
-    const fields = [...data.fields.document, ...data.fields.signer]
-      .filter((field) => field.id !== 'consent_agreement' && field.id !== '406948812')
-      .map((field) => {
-        // Signature field: determine type from value (data:image = signature, else text)
-        if (field.id === '789012') {
-          const isDrawnSignature =
-            typeof field.value === 'string' && field.value.startsWith('data:image/');
-          return {
-            id: field.id,
-            value: field.value,
-            type: isDrawnSignature ? 'signature' : 'text',
-          };
-        }
-        // Document fields have type from config
-        const docField = documentFieldsConfig.find((f) => f.id === field.id);
-        return {
-          id: field.id,
-          value: field.value,
-          type: docField?.type || 'text',
-        };
-      });
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    const bearerToken = import.meta.env.VITE_SUPERDOC_SERVICES_API_KEY;
-    if (bearerToken) {
-      headers.Authorization = `Bearer ${bearerToken}`;
-    }
-
-    console.log('Annotating document with fields:', fields);
-
     try {
-      const response = await fetch('/v1/annotate?to=pdf', {
+      if (typeof data.documentSource !== 'string') {
+        log('Download requires a document URL.');
+        return;
+      }
+
+      const response = await fetch('/v1/download', {
         method: 'POST',
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           document: { url: data.documentSource },
-          fields,
+          fields: data.fields,
+          fileName: data.fileName,
         }),
       });
 
@@ -396,24 +153,7 @@ export function App() {
         throw new Error(error || 'Failed to annotate document');
       }
 
-      const result = await response.json();
-      const { base64, contentType } = result.document;
-
-      // Convert base64 to blob
-      const byteCharacters = atob(base64);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: contentType });
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = data.fileName || 'document.pdf';
-      a.click();
-      URL.revokeObjectURL(url);
+      await downloadBlob(response, data.fileName || 'document.pdf');
       log('✓ Downloaded PDF');
     } catch (error) {
       console.error('Error processing document:', error);
@@ -522,8 +262,7 @@ export function App() {
                 ref={esignRef}
                 eventId={eventId}
                 document={{
-                  source:
-                    'https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement_updated.docx',
+                  source: documentSource,
                   mode: 'full',
                   validation: {
                     scroll: { required: true },

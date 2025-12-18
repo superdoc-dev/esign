@@ -16,9 +16,9 @@ export default defineConfig(({ mode }) => ({
   server: {
     proxy: {
       '/v1': {
-        target: 'https://api.superdoc.dev',
+        target: 'http://localhost:3003',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
     },
   },
