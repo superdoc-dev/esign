@@ -64,7 +64,8 @@ jobs:
             --memory=1Gi \
             --cpu=1 \
             --allow-unauthenticated \
-            --set-env-vars SUPERDOC_SERVICES_API_KEY="${SUPERDOC_SERVICES_API_KEY}",SUPERDOC_SERVICES_BASE_URL="${SUPERDOC_SERVICES_BASE_URL}"
+            --set-env-vars SUPERDOC_SERVICES_BASE_URL="${SUPERDOC_SERVICES_BASE_URL}" \
+            --set-secrets="SUPERDOC_SERVICES_API_KEY=esign-demo-sd-services-api-key:latest"
         env:
           IMAGE: ${{ env.IMAGE }}
           REGION: ${{ env.REGION }}
