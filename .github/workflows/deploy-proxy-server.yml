@@ -1,11 +1,7 @@
-name: Deploy Proxy Server to GCP
+name: Deploy Proxy Server
 
 on:
   workflow_dispatch:
-    inputs:
-      deploy_env:
-        description: 'Environment label (optional)'
-        required: false
 
 env:
   PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}

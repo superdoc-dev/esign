@@ -12,7 +12,6 @@ const SUPERDOC_SERVICES_BASE_URL =
 const CONSENT_FIELD_IDS = new Set(['consent_agreement', 'terms', 'email', '406948812']);
 const SIGNATURE_FIELD_ID = '789012';
 
-// TODO: tighten origin allowlist when the frontend URL is known.
 app.use(
   cors({
     origin: 'https://esign.superdoc.dev',

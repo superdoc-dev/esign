@@ -1,74 +1,63 @@
-name: Deploy Proxy Server to GCP
+name: Deploy Demo
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "demo/**"
+      - "!**.md"
   workflow_dispatch:
-    inputs:
-      deploy_env:
-        description: 'Environment label (optional)'
-        required: false
 
-env:
-  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-  REGION: ${{ vars.GCP_REGION }}
-  SERVICE_NAME: ${{ vars.GCP_SERVICE_NAME }}
-  SUPERDOC_SERVICES_API_KEY: ${{ secrets.SUPERDOC_SERVICES_API_KEY }}
-  SUPERDOC_SERVICES_BASE_URL: ${{ vars.SUPERDOC_SERVICES_BASE_URL }}
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Auth to Google Cloud
-        uses: google-github-actions/auth@v2
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
+      - uses: actions/checkout@v5
         with:
-          project_id: ${{ env.PROJECT_ID }}
+          fetch-depth: 0
+          token: ${{ steps.generate_token.outputs.token }}
 
-      - name: Build and push container with Cloud Build
-        run: |
-          REGION="${REGION:-us-central1}"
-          SERVICE_NAME="${SERVICE_NAME:-esign-demo-proxy-server}"
-          IMAGE="gcr.io/${PROJECT_ID}/${SERVICE_NAME}:${GITHUB_SHA}"
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
 
-          echo "REGION=${REGION}" >> $GITHUB_ENV
-          echo "SERVICE_NAME=${SERVICE_NAME}" >> $GITHUB_ENV
-          echo "IMAGE=${IMAGE}" >> $GITHUB_ENV
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "pnpm"
 
-          gcloud builds submit demo/server --tag "${IMAGE}"
+      - name: Install and Build
         env:
-          PROJECT_ID: ${{ env.PROJECT_ID }}
-          REGION: ${{ env.REGION }}
-          SERVICE_NAME: ${{ env.SERVICE_NAME }}
-
-      - name: Deploy container to Cloud Run
+          VITE_SUPERDOC_SERVICES_API_KEY: ${{ secrets.VITE_SUPERDOC_SERVICES_API_KEY }}
         run: |
-          REGION="${REGION:-us-central1}"
-          SERVICE_NAME="${SERVICE_NAME:-esign-demo-proxy-server}"
-          IMAGE="${IMAGE}"
-          SUPERDOC_SERVICES_BASE_URL="${SUPERDOC_SERVICES_BASE_URL:-https://api.superdoc.dev}"
+          pnpm install
+          rm -rf dist
+          pnpm build
+          cd demo
+          rm -rf node_modules dist
+          pnpm install
+          pnpm build
 
-          gcloud run deploy "${SERVICE_NAME}" \
-            --image "${IMAGE}" \
-            --region "${REGION}" \
-            --memory=1Gi \
-            --cpu=1 \
-            --allow-unauthenticated \
-            --set-env-vars SUPERDOC_SERVICES_BASE_URL="${SUPERDOC_SERVICES_BASE_URL}" \
-            --set-secrets="SUPERDOC_SERVICES_API_KEY=esign-demo-sd-services-api-key:latest"
-        env:
-          IMAGE: ${{ env.IMAGE }}
-          REGION: ${{ env.REGION }}
-          SERVICE_NAME: ${{ env.SERVICE_NAME }}
-          SUPERDOC_SERVICES_API_KEY: ${{ env.SUPERDOC_SERVICES_API_KEY }}
-          SUPERDOC_SERVICES_BASE_URL: ${{ env.SUPERDOC_SERVICES_BASE_URL }}
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./demo/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
