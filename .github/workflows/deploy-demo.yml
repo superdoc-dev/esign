@@ -42,8 +42,6 @@ jobs:
           cache: "pnpm"
 
       - name: Install and Build
-        env:
-          VITE_SUPERDOC_SERVICES_API_KEY: ${{ secrets.VITE_SUPERDOC_SERVICES_API_KEY }}
         run: |
           pnpm install
           rm -rf dist
