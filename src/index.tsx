@@ -404,22 +404,34 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
     const documentControls = renderDocumentControls();
     const formActions = renderFormActions();
 
-    useImperativeHandle(ref, () => ({
-      getState: () => ({
+    useImperativeHandle(
+      ref,
+      () => ({
+        getState: () => ({
+          scrolled,
+          fields: fieldValues,
+          isValid,
+          isSubmitting,
+        }),
+        getAuditTrail: () => auditTrailRef.current,
+        reset: () => {
+          setScrolled(!document.validation?.scroll?.required);
+          setFieldValues(new Map());
+          setIsValid(false);
+          auditTrailRef.current = [];
+          setAuditTrail([]);
+        },
+        updateFieldInDocument,
+      }),
+      [
         scrolled,
-        fields: fieldValues,
+        fieldValues,
         isValid,
         isSubmitting,
-      }),
-      getAuditTrail: () => auditTrailRef.current,
-      reset: () => {
-        setScrolled(!document.validation?.scroll?.required);
-        setFieldValues(new Map());
-        setIsValid(false);
-        auditTrailRef.current = [];
-        setAuditTrail([]);
-      },
-    }));
+        document.validation?.scroll?.required,
+        updateFieldInDocument,
+      ],
+    );
 
     return (
       <div className={`superdoc-esign-container ${className || ''}`} style={style}>
