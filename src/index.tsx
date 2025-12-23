@@ -36,6 +36,7 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
     const [fieldValues, setFieldValues] = useState<Map<string, Types.FieldValue>>(new Map());
     const [isValid, setIsValid] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
     const [auditTrail, setAuditTrail] = useState<Types.AuditEvent[]>([]);
     const [isReady, setIsReady] = useState(false);
 
@@ -298,7 +299,9 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
     }, [scrolled, fieldValues, isSubmitting, checkIsValid, onStateChange]);
 
     const handleDownload = useCallback(async () => {
-      if (isDisabled) return;
+      if (isDisabled || isDownloading) return;
+
+      setIsDownloading(true);
 
       const downloadData: Types.DownloadData = {
         eventId,
@@ -313,8 +316,21 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
         fileName: download?.fileName || 'document.pdf',
       };
 
-      await onDownload?.(downloadData);
-    }, [isDisabled, eventId, document.source, fields, fieldValues, download, onDownload]);
+      try {
+        await onDownload?.(downloadData);
+      } finally {
+        setIsDownloading(false);
+      }
+    }, [
+      isDisabled,
+      isDownloading,
+      eventId,
+      document.source,
+      fields,
+      fieldValues,
+      download,
+      onDownload,
+    ]);
 
     const handleSubmit = useCallback(async () => {
       if (!isValid || isDisabled || isSubmitting) return;
@@ -378,6 +394,7 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
           onClick={handleDownload}
           fileName={download?.fileName}
           isDisabled={isDisabled}
+          isDownloading={isDownloading}
         />
       );
     };

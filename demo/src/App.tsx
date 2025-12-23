@@ -11,6 +11,8 @@ import CustomSignature from './CustomSignature';
 import 'superdoc/style.css';
 import './App.css';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 const documentSource =
   'https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement_updated.docx';
 
@@ -91,7 +93,7 @@ export function App() {
     console.log('Submit data:', data);
 
     try {
-      const response = await fetch('/v1/sign', {
+      const response = await fetch(`${API_BASE_URL}/v1/sign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -132,7 +134,7 @@ export function App() {
         return;
       }
 
-      const response = await fetch('/v1/download', {
+      const response = await fetch(`${API_BASE_URL}/v1/download`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
