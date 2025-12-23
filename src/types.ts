@@ -33,6 +33,7 @@ export interface DownloadButtonProps {
   onClick: () => void;
   fileName?: string;
   isDisabled: boolean;
+  isDownloading: boolean;
 }
 
 export interface SubmitButtonProps {
