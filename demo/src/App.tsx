@@ -100,12 +100,6 @@ export function App() {
           signerFields: data.signerFields,
           auditTrail: data.auditTrail,
           eventId: data.eventId,
-          signer: {
-            name: documentFields['234567'] || 'Signer',
-            email: 'andrii@superdoc.dev',
-            ip: '127.0.0.1',
-            userAgent: navigator.userAgent,
-          },
           certificate: { enable: true },
           metadata: {
             company: documentFields['345678'],

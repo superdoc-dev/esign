@@ -11,6 +11,12 @@ const SUPERDOC_SERVICES_BASE_URL =
   process.env.SUPERDOC_SERVICES_BASE_URL || 'https://api.superdoc.dev';
 const CONSENT_FIELD_IDS = new Set(['consent_agreement', 'terms', 'email', '406948812']);
 const SIGNATURE_FIELD_ID = '789012';
+const IP_ADDRESS = '127.0.0.1'; // Replace with real client IP once available
+const DEMO_USER = {
+  name: 'Demo User',
+  email: 'demo@superdoc.dev',
+  userAgent: 'demo-user-agent',
+};
 
 app.use(
   cors({
@@ -38,7 +44,7 @@ const normalizeFields = (fieldsPayload = {}) => {
       const normalized = { id: field.id, value, type };
       if (type === 'signature') {
         normalized.options = {
-          bottomLabel: { text: 'ip: 127.0.0.1', color: '#666' },
+          bottomLabel: { text: `ip: ${IP_ADDRESS}`, color: '#666' },
         };
       }
       return normalized;
@@ -120,7 +126,6 @@ app.post('/v1/sign', async (req, res) => {
       signerFields = [],
       auditTrail = [],
       eventId,
-      signer,
       certificate,
       metadata,
       fileName = 'signed-document.pdf',
@@ -154,7 +159,12 @@ app.post('/v1/sign', async (req, res) => {
       eventId,
       document: { base64: annotatedBase64 },
       auditTrail,
-      signer,
+      signer: {
+        name: DEMO_USER.name,
+        email: DEMO_USER.email,
+        ip: IP_ADDRESS,
+        userAgent: DEMO_USER.userAgent,
+      },
       certificate,
       metadata,
     };
