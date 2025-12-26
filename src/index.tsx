@@ -220,11 +220,15 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
         }
         superdocRef.current = null;
       };
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- compare margin primitives to avoid re-init on every render
     }, [
       document.source,
       document.mode,
       document.layoutMode,
-      document.layoutMargins,
+      document.layoutMargins?.top,
+      document.layoutMargins?.bottom,
+      document.layoutMargins?.left,
+      document.layoutMargins?.right,
       discoverAndApplyFields,
     ]);
 
