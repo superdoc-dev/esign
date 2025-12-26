@@ -8,28 +8,32 @@ export const createSubmitButton = (config?: SubmitConfig) => {
     isDisabled,
     isSubmitting,
   }) => {
-    const getLabel = () => {
-      return config?.label || 'Submit';
-    };
+    const label = config?.label || 'Submit';
+    const disabled = !isValid || isDisabled || isSubmitting;
 
     return (
       <button
         onClick={onClick}
-        disabled={!isValid || isDisabled || isSubmitting}
-        className={`superdoc-esign-btn superdoc-esign-btn--submit`}
+        disabled={disabled}
+        className={`superdoc-esign-btn superdoc-esign-btn--submit${isSubmitting ? ' superdoc-esign-btn--loading' : ''}`}
         style={{
           padding: '12px 24px',
           borderRadius: '6px',
           border: 'none',
           background: '#007bff',
           color: '#fff',
-          cursor: !isValid || isDisabled ? 'not-allowed' : 'pointer',
-          opacity: !isValid || isDisabled ? 0.5 : 1,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled && !isSubmitting ? 0.5 : 1,
           fontSize: '16px',
           fontWeight: 'bold',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          transition: 'opacity 0.2s ease',
         }}
       >
-        {getLabel()}
+        {isSubmitting && <span className="superdoc-esign-spinner superdoc-esign-spinner--light" />}
+        {isSubmitting ? 'Submitting...' : label}
       </button>
     );
   };

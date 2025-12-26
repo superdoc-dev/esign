@@ -36,6 +36,7 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
     const [fieldValues, setFieldValues] = useState<Map<string, Types.FieldValue>>(new Map());
     const [isValid, setIsValid] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
     const [auditTrail, setAuditTrail] = useState<Types.AuditEvent[]>([]);
     const [isReady, setIsReady] = useState(false);
 
@@ -193,6 +194,8 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
           modules: {
             comments: false,
           },
+          layoutMode: document.layoutMode,
+          layoutMargins: document.layoutMargins,
           onReady: () => {
             // Guard callback execution if cleanup already ran
             if (aborted) return;
@@ -218,7 +221,17 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
         }
         superdocRef.current = null;
       };
-    }, [document.source, document.mode, discoverAndApplyFields]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- compare margin primitives to avoid re-init on every render
+    }, [
+      document.source,
+      document.mode,
+      document.layoutMode,
+      document.layoutMargins?.top,
+      document.layoutMargins?.bottom,
+      document.layoutMargins?.left,
+      document.layoutMargins?.right,
+      discoverAndApplyFields,
+    ]);
 
     useEffect(() => {
       if (!document.validation?.scroll?.required || !isReady) return;
@@ -298,7 +311,9 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
     }, [scrolled, fieldValues, isSubmitting, checkIsValid, onStateChange]);
 
     const handleDownload = useCallback(async () => {
-      if (isDisabled) return;
+      if (isDisabled || isDownloading) return;
+
+      setIsDownloading(true);
 
       const downloadData: Types.DownloadData = {
         eventId,
@@ -313,8 +328,21 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
         fileName: download?.fileName || 'document.pdf',
       };
 
-      await onDownload?.(downloadData);
-    }, [isDisabled, eventId, document.source, fields, fieldValues, download, onDownload]);
+      try {
+        await onDownload?.(downloadData);
+      } finally {
+        setIsDownloading(false);
+      }
+    }, [
+      isDisabled,
+      isDownloading,
+      eventId,
+      document.source,
+      fields,
+      fieldValues,
+      download,
+      onDownload,
+    ]);
 
     const handleSubmit = useCallback(async () => {
       if (!isValid || isDisabled || isSubmitting) return;
@@ -378,6 +406,7 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
           onClick={handleDownload}
           fileName={download?.fileName}
           isDisabled={isDisabled}
+          isDownloading={isDownloading}
         />
       );
     };
@@ -404,22 +433,34 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
     const documentControls = renderDocumentControls();
     const formActions = renderFormActions();
 
-    useImperativeHandle(ref, () => ({
-      getState: () => ({
+    useImperativeHandle(
+      ref,
+      () => ({
+        getState: () => ({
+          scrolled,
+          fields: fieldValues,
+          isValid,
+          isSubmitting,
+        }),
+        getAuditTrail: () => auditTrailRef.current,
+        reset: () => {
+          setScrolled(!document.validation?.scroll?.required);
+          setFieldValues(new Map());
+          setIsValid(false);
+          auditTrailRef.current = [];
+          setAuditTrail([]);
+        },
+        updateFieldInDocument,
+      }),
+      [
         scrolled,
-        fields: fieldValues,
+        fieldValues,
         isValid,
         isSubmitting,
-      }),
-      getAuditTrail: () => auditTrailRef.current,
-      reset: () => {
-        setScrolled(!document.validation?.scroll?.required);
-        setFieldValues(new Map());
-        setIsValid(false);
-        auditTrailRef.current = [];
-        setAuditTrail([]);
-      },
-    }));
+        document.validation?.scroll?.required,
+        updateFieldInDocument,
+      ],
+    );
 
     return (
       <div className={`superdoc-esign-container ${className || ''}`} style={style}>

@@ -51,3 +51,24 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           pnpm dlx semantic-release
+
+      - name: Create sync PR to main
+        if: github.ref == 'refs/heads/stable'
+        env:
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          pr_number=$(gh pr list --base main --head stable --state open --json number --jq '.[0].number')
+          if [ -z "$pr_number" ]; then
+            git fetch origin main
+            if git diff --quiet origin/main...HEAD; then
+              echo "Main is already up to date with stable; skipping PR."
+              exit 0
+            fi
+            pr_url=$(gh pr create --base main --head stable --title "chore: sync stable release to main" --body "Automated PR to merge the latest stable changes back into main.")
+            pr_number=$(echo "$pr_url" | grep -oE '[0-9]+$')
+            echo "Created PR #$pr_number to sync stable into main."
+          else
+            echo "PR #$pr_number already open to sync stable into main."
+          fi
+          gh pr merge "$pr_number" --merge --auto || echo "Auto-merge setup skipped (conditions not met)."
