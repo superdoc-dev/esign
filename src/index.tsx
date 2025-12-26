@@ -193,6 +193,8 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
           modules: {
             comments: false,
           },
+          layoutMode: document.layoutMode,
+          layoutMargins: document.layoutMargins,
           onReady: () => {
             // Guard callback execution if cleanup already ran
             if (aborted) return;
@@ -218,7 +220,13 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
         }
         superdocRef.current = null;
       };
-    }, [document.source, document.mode, discoverAndApplyFields]);
+    }, [
+      document.source,
+      document.mode,
+      document.layoutMode,
+      document.layoutMargins,
+      discoverAndApplyFields,
+    ]);
 
     useEffect(() => {
       if (!document.validation?.scroll?.required || !isReady) return;

@@ -134,6 +134,8 @@ export function App() {
               source:
                 'https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement.docx',
               mode: 'full',
+              layoutMode: 'responsive',
+              layoutMargins: { top: 10, bottom: 10, left: 10, right: 10 },
               validation: {
                 scroll: { required: true },
               },
