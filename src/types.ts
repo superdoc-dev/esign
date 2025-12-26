@@ -33,6 +33,7 @@ export interface DownloadButtonProps {
   onClick: () => void;
   fileName?: string;
   isDisabled: boolean;
+  isDownloading: boolean;
 }
 
 export interface SubmitButtonProps {
@@ -119,6 +120,7 @@ export interface SuperDocESignHandle {
   getState: () => SigningState;
   getAuditTrail: () => AuditEvent[];
   reset: () => void;
+  updateFieldInDocument: (field: FieldUpdate) => void;
 }
 
 export interface DownloadData {
