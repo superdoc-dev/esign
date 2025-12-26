@@ -194,6 +194,8 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
           modules: {
             comments: false,
           },
+          layoutMode: document.layoutMode,
+          layoutMargins: document.layoutMargins,
           onReady: () => {
             // Guard callback execution if cleanup already ran
             if (aborted) return;
@@ -219,7 +221,17 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
         }
         superdocRef.current = null;
       };
-    }, [document.source, document.mode, discoverAndApplyFields]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- compare margin primitives to avoid re-init on every render
+    }, [
+      document.source,
+      document.mode,
+      document.layoutMode,
+      document.layoutMargins?.top,
+      document.layoutMargins?.bottom,
+      document.layoutMargins?.left,
+      document.layoutMargins?.right,
+      discoverAndApplyFields,
+    ]);
 
     useEffect(() => {
       if (!document.validation?.scroll?.required || !isReady) return;

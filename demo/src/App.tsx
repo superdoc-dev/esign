@@ -260,6 +260,8 @@ export function App() {
                 document={{
                   source: documentSource,
                   mode: 'full',
+                  layoutMode: 'responsive',
+                  layoutMargins: { top: 10, bottom: 10, left: 10, right: 10 },
                   validation: {
                     scroll: { required: true },
                   },

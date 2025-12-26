@@ -54,6 +54,13 @@ export interface SubmitConfig {
   component?: React.ComponentType<SubmitButtonProps>;
 }
 
+export interface LayoutMargins {
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+}
+
 export interface DocumentConfig {
   source: string | File | Blob;
   mode?: 'full' | 'download';
@@ -62,6 +69,18 @@ export interface DocumentConfig {
       required?: boolean;
     };
   };
+  /**
+   * Document layout mode:
+   * - 'paginated' (default): Fixed page width, shows page breaks
+   * - 'responsive': 100% width, text reflows to fit container (useful for mobile/accessibility)
+   * Note: 'responsive' takes precedence over pagination - pagination is ignored when layoutMode is 'responsive'
+   */
+  layoutMode?: 'responsive' | 'paginated';
+  /**
+   * Custom margins in pixels for responsive layout mode.
+   * Only applies when layoutMode is 'responsive'.
+   */
+  layoutMargins?: LayoutMargins;
 }
 
 export interface SuperDocESignProps {
