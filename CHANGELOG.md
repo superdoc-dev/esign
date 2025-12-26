@@ -1,3 +1,11 @@
+# [1.5.0](https://github.com/superdoc-dev/esign/compare/v1.4.2...v1.5.0) (2025-12-26)
+
+
+### Features
+
+* enhance download functionality with loading state and API integration ([#10](https://github.com/superdoc-dev/esign/issues/10)) ([6051e8f](https://github.com/superdoc-dev/esign/commit/6051e8f36936129135a53cfa7f114b333f9813ea))
+* responsive layout mode ([#11](https://github.com/superdoc-dev/esign/issues/11)) ([410924b](https://github.com/superdoc-dev/esign/commit/410924b2042a874119831d6e5d55b2651e573d93))
+
 ## [1.4.2](https://github.com/superdoc-dev/esign/compare/v1.4.1...v1.4.2) (2025-12-11)
 
 
