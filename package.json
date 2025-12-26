@@ -1,6 +1,6 @@
 {
   "name": "@superdoc-dev/esign",
-  "version": "1.3.0",
+  "version": "1.5.0",
   "description": "React eSignature component for SuperDoc",
   "type": "module",
   "main": "./dist/index.js",
@@ -41,6 +41,7 @@
     "superdoc",
     "esign",
     "esignature",
+    "electronic-signature",
     "clickwrap",
     "agreement",
     "document",
