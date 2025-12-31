@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import SuperDocESign from '@superdoc-dev/esign';
+import SuperDocESign, { textToImageDataUrl } from '@superdoc-dev/esign';
 import type {
   SubmitData,
   SigningState,
@@ -15,6 +15,54 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const documentSource =
   'https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement_updated.docx';
+
+const signerFieldsConfig = [
+  {
+    id: '789012',
+    type: 'signature' as const,
+    label: 'Your Signature',
+    validation: { required: true },
+    component: CustomSignature,
+  },
+  {
+    id: 'terms',
+    type: 'checkbox' as const,
+    label: 'I accept the terms and conditions',
+    validation: { required: true },
+  },
+  {
+    id: 'email',
+    type: 'checkbox' as const,
+    label: 'Send me a copy of the agreement',
+    validation: { required: false },
+  },
+];
+
+const signatureFieldIds = new Set(
+  signerFieldsConfig.filter((field) => field.type === 'signature').map((field) => field.id),
+);
+
+const toSignatureImageValue = (value: SubmitData['signerFields'][number]['value']) => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string' && value.startsWith('data:image/')) return value;
+  return textToImageDataUrl(String(value));
+};
+
+const mapSignerFieldsWithType = (
+  fields: Array<{ id: string; value: SubmitData['signerFields'][number]['value'] }>,
+  signatureType: 'signature' | 'image',
+) =>
+  fields.map((field) => {
+    if (!signatureFieldIds.has(field.id)) {
+      return field;
+    }
+
+    return {
+      ...field,
+      type: signatureType,
+      value: toSignatureImageValue(field.value),
+    };
+  });
 
 // Helper to download a response blob as a file
 const downloadBlob = async (response: Response, fileName: string) => {
@@ -93,13 +141,15 @@ export function App() {
     console.log('Submit data:', data);
 
     try {
+      const signerFields = mapSignerFieldsWithType(data.signerFields, 'signature');
+
       const response = await fetch(`${API_BASE_URL}/v1/sign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           document: { url: documentSource },
           documentFields: data.documentFields,
-          signerFields: data.signerFields,
+          signerFields,
           auditTrail: data.auditTrail,
           eventId: data.eventId,
           certificate: { enable: true },
@@ -108,6 +158,7 @@ export function App() {
             plan: documentFields['456789'],
           },
           fileName: `signed_agreement_${data.eventId}.pdf`,
+          signatureMode: 'sign',
         }),
       });
 
@@ -134,13 +185,19 @@ export function App() {
         return;
       }
 
+      const signerFields = mapSignerFieldsWithType(data.fields.signer, 'image');
+
       const response = await fetch(`${API_BASE_URL}/v1/download`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           document: { url: data.documentSource },
-          fields: data.fields,
+          fields: {
+            ...data.fields,
+            signer: signerFields,
+          },
           fileName: data.fileName,
+          signatureMode: 'annotate',
         }),
       });
 
@@ -272,27 +329,7 @@ export function App() {
                     value: documentFields[f.id],
                     type: f.type,
                   })),
-                  signer: [
-                    {
-                      id: '789012',
-                      type: 'signature',
-                      label: 'Your Signature',
-                      validation: { required: true },
-                      component: CustomSignature,
-                    },
-                    {
-                      id: 'terms',
-                      type: 'checkbox',
-                      label: 'I accept the terms and conditions',
-                      validation: { required: true },
-                    },
-                    {
-                      id: 'email',
-                      type: 'checkbox',
-                      label: 'Send me a copy of the agreement',
-                      validation: { required: false },
-                    },
-                  ],
+                  signer: signerFieldsConfig,
                 }}
                 download={{ label: 'Download PDF' }}
                 onSubmit={handleSubmit}

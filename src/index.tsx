@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import type { SuperDoc } from 'superdoc';
 import type * as Types from './types';
+import { textToImageDataUrl } from './utils/signature';
 import {
   SignatureInput,
   CheckboxInput,
@@ -9,6 +10,7 @@ import {
 } from './defaults';
 
 export * from './types';
+export { textToImageDataUrl };
 export { SignatureInput, CheckboxInput };
 
 type Editor = NonNullable<SuperDoc['activeEditor']>;
@@ -81,33 +83,6 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
         editor.commands.updateStructuredContentById(field.id, updatePayload);
       }
     }, []);
-
-    function textToImageDataUrl(text: string): string {
-      const canvas = globalThis.document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
-
-      const fontSize = 30;
-      ctx.font = `italic ${fontSize}px cursive`;
-
-      const metrics = ctx.measureText(text);
-      const textWidth = metrics.width;
-
-      const estimatedHeight = fontSize * 1.3; // Cursive fonts typically need ~1.3x font size
-      const paddingX = 4;
-      const paddingY = 6; // Extra vertical padding for cursive descenders
-
-      canvas.width = Math.ceil(textWidth + paddingX * 2) + 20;
-      canvas.height = Math.ceil(estimatedHeight + paddingY * 2);
-
-      ctx.font = `italic ${fontSize}px cursive`;
-      ctx.fillStyle = 'black';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-
-      return canvas.toDataURL('image/png');
-    }
 
     const discoverAndApplyFields = useCallback(
       (editor: Editor) => {
