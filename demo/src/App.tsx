@@ -308,9 +308,9 @@ export function App() {
             Use the document toolbar to download the current agreement at any time.
           </p>
 
-          <div style={{ display: 'flex', gap: '24px' }}>
+          <div className="main-layout-container">
             {/* Main content */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="main-content-area">
               <SuperDocESign
                 ref={esignRef}
                 eventId={eventId}
@@ -372,23 +372,9 @@ export function App() {
             </div>
 
             {/* Right Sidebar - Document Fields */}
-            <div
-              style={{
-                width: '280px',
-                flexShrink: 0,
-                padding: '16px',
-                background: '#f9fafb',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                alignSelf: 'flex-start',
-              }}
-            >
-              <h3
-                style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 600, color: '#374151' }}
-              >
-                Document Fields
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="document-fields-sidebar">
+              <h3>Document Fields</h3>
+              <div className="document-fields-list">
                 {documentFieldsConfig.map((field) => (
                   <div key={field.id}>
                     <label
