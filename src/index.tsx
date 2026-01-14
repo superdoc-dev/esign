@@ -80,7 +80,7 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
       }
 
       if (field.id) {
-        editor.commands.updateStructuredContentById(field.id, updatePayload);
+        editor.commands?.updateStructuredContentById?.(field.id, updatePayload);
       }
     }, []);
 

@@ -25,13 +25,13 @@ const signerFieldsConfig = [
     component: CustomSignature,
   },
   {
-    id: 'terms',
+    id: '1',
     type: 'checkbox' as const,
     label: 'I accept the terms and conditions',
     validation: { required: true },
   },
   {
-    id: 'email',
+    id: '2',
     type: 'checkbox' as const,
     label: 'Send me a copy of the agreement',
     validation: { required: false },

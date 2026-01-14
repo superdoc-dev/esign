@@ -164,7 +164,7 @@ describe('SuperDocESign component', () => {
         fields: {
           signer: [
             {
-              id: 'sig-1',
+              id: '1',
               type: 'signature',
               label: 'Signature',
               validation: { required: true },
@@ -219,7 +219,7 @@ describe('SuperDocESign component', () => {
       fields: {
         signer: [
           {
-            id: 'sig-field',
+            id: '2',
             type: 'signature',
             label: 'Signature',
             validation: { required: true },
@@ -240,15 +240,15 @@ describe('SuperDocESign component', () => {
 
     const lastFieldChange = onFieldChange.mock.calls.at(-1)?.[0];
     expect(lastFieldChange).toMatchObject({
-      id: 'sig-field',
+      id: '2',
       value: 'John Doe',
     });
 
     const lastState = onStateChange.mock.calls.at(-1)?.[0];
-    expect(lastState?.fields.get('sig-field')).toBe('John Doe');
+    expect(lastState?.fields.get('2')).toBe('John Doe');
 
     expect(superDocMock.mockUpdateStructuredContentById).toHaveBeenCalledWith(
-      'sig-field',
+      '2',
       expect.objectContaining({
         json: expect.objectContaining({
           attrs: expect.objectContaining({ src: expect.any(String) }),
@@ -270,7 +270,7 @@ describe('SuperDocESign component', () => {
         fields: {
           signer: [
             {
-              id: 'sig-field',
+              id: '2',
               type: 'signature',
               label: 'Signature',
               validation: { required: true },
@@ -327,7 +327,7 @@ describe('SuperDocESign component', () => {
       isValid: true,
       isSubmitting: false,
     });
-    expect(stateBeforeReset?.fields.get('sig-field')).toBe('Audit User');
+    expect(stateBeforeReset?.fields.get('2')).toBe('Audit User');
 
     act(() => {
       ref.current?.reset();
@@ -381,7 +381,7 @@ describe('SuperDocESign component', () => {
       fields: {
         signer: [
           {
-            id: 'custom-field',
+            id: '3',
             type: 'text',
             label: 'Custom Field',
             component: CustomField,
@@ -420,7 +420,7 @@ describe('SuperDocESign component', () => {
     expect(downloadPayload).toMatchObject({
       eventId: 'evt_test',
       fields: {
-        signer: [{ id: 'custom-field', value: 'custom-value' }],
+        signer: [{ id: '3', value: 'custom-value' }],
       },
       fileName: 'document.pdf',
     });
@@ -439,13 +439,13 @@ describe('SuperDocESign component', () => {
       fields: {
         document: [
           {
-            id: 'doc-field',
+            id: '4',
             value: 'Document Value',
           },
         ],
         signer: [
           {
-            id: 'sig-field',
+            id: '2',
             type: 'signature',
             label: 'Signature',
             validation: { required: true },
@@ -489,9 +489,9 @@ describe('SuperDocESign component', () => {
     expect(typeof submitData.duration).toBe('number');
     expect(submitData.isFullyCompleted).toBe(true);
 
-    expect(submitData.documentFields).toEqual([{ id: 'doc-field', value: 'Document Value' }]);
+    expect(submitData.documentFields).toEqual([{ id: '4', value: 'Document Value' }]);
 
-    expect(submitData.signerFields).toEqual([{ id: 'sig-field', value: 'Payload User' }]);
+    expect(submitData.signerFields).toEqual([{ id: '2', value: 'Payload User' }]);
 
     const auditTypes = submitData.auditTrail.map((event: AuditEvent) => event.type);
     expect(auditTypes).to.include.members(['ready', 'field_change']);

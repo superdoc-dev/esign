@@ -37,22 +37,22 @@ function App() {
       
       fields={{
         document: [
-          { id: 'user_name', value: 'John Doe' },
-          { id: 'agreement_date', value: new Date().toLocaleDateString() },
-          { id: 'company_name', value: 'SuperDoc' },
-          { id: 'service_type', value: 'Premium' },
-          { id: 'agreement_jurisdiction', value: 'CA' },
-          { id: 'company_address', value: '123 Main St, Anytown, USA' }
+          { id: '1', value: 'John Doe' },
+          { id: '2', value: new Date().toLocaleDateString() },
+          { id: '3', value: 'SuperDoc' },
+          { id: '4', value: 'Premium' },
+          { id: '5', value: 'CA' },
+          { id: '6', value: '123 Main St, Anytown, USA' }
         ],
         signer: [
           {
-            id: 'signature',
+            id: '7',
             type: 'signature',
             validation: { required: true },
             label: 'Type your full name'
           },
           {
-            id: 'accept_terms',
+            id: '8',
             type: 'checkbox',
             validation: { required: true },
             label: 'I accept the terms'
@@ -118,11 +118,11 @@ See [Python, Node.js, and more examples](https://docs.superdoc.dev/solutions/esi
   timestamp: "2024-01-15T10:30:00Z",
   duration: 45000,
   documentFields: [
-    { id: "user_name", value: "John Doe" }
+    { id: "1", value: "John Doe" }
   ],
   signerFields: [
-    { id: "signature", value: "John Doe" },
-    { id: "accept_terms", value: true }
+    { id: "7", value: "John Doe" },
+    { id: "8", value: true }
   ],
   auditTrail: [
     { type: "ready", timestamp: "..." },
