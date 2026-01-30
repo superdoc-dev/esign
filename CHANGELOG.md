@@ -1,3 +1,35 @@
+# [2.0.0](https://github.com/superdoc-dev/esign/compare/v1.5.0...v2.0.0) (2026-01-30)
+
+
+* Breaking change: ESign migrated to the latest SuperDoc [+ SD-1685] ([#15](https://github.com/superdoc-dev/esign/issues/15)) ([836c818](https://github.com/superdoc-dev/esign/commit/836c818e458ede70d5a5da31a1bec13b342415d3))
+
+
+### Features
+
+* migrate to SD v1 ([#13](https://github.com/superdoc-dev/esign/issues/13)) ([e151289](https://github.com/superdoc-dev/esign/commit/e151289197c9ce2663e8290fa4ad3cad2e02660f))
+
+
+### BREAKING CHANGES
+
+* - Updated `superdoc` version to 1.6.1 in package.json and pnpm-lock.yaml.
+- Refactored field IDs in the demo and core components for consistency, changing IDs to numeric values.
+- Updated README examples to reflect new field ID structure.
+- Improved handling of structured content updates in the SuperDocESign component.
+- Updated various dependencies in the pnpm-lock.yaml for better compatibility and performance.
+
+* feat: added table support and updated superdoc version
+
+- Updated `superdoc` version to 1.9.0 in package.json and pnpm-lock.yaml for improved features and compatibility.
+- Modified demo package.json to reflect the new superdoc version.
+- Refactored document field handling in the App component to support table fields and improved state management.
+- Updated tests to include support for table fields and ensure correct functionality.
+
+* feat: update Vite configuration to exclude specific directories
+
+- Added exclusion patterns for `node_modules` and `demo/server` in the Vite configuration to improve build performance and prevent unnecessary file processing.
+
+* refactor: improve row deletion logic in the component
+
 # [1.5.0](https://github.com/superdoc-dev/esign/compare/v1.4.2...v1.5.0) (2025-12-26)
 
 
