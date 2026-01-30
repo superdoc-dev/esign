@@ -29,7 +29,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-const normalizeFields = (fieldsPayload = {}) => {
+const normalizeFields = (fieldsPayload = {}, signatureMode = 'annotate') => {
   const documentFields = Array.isArray(fieldsPayload.document) ? fieldsPayload.document : [];
   const signerFields = Array.isArray(fieldsPayload.signer) ? fieldsPayload.signer : [];
 
@@ -38,8 +38,8 @@ const normalizeFields = (fieldsPayload = {}) => {
     .map((field) => {
       const isSignatureField = field.id === SIGNATURE_FIELD_ID;
       const value = field.value ?? '';
-      const isDrawnSignature = typeof value === 'string' && value.startsWith('data:image/');
-      const type = isSignatureField && isDrawnSignature ? 'signature' : 'text';
+      const signatureType = signatureMode === 'sign' ? 'signature' : 'image';
+      const type = isSignatureField ? signatureType : (field.type || 'text');
 
       const normalized = { id: field.id, value, type };
       if (type === 'signature') {
@@ -85,7 +85,8 @@ const sendPdfBuffer = (res, base64, fileName, contentType = 'application/pdf') =
 
 app.post('/v1/download', async (req, res) => {
   try {
-    const { document, fields = {}, fileName = 'document.pdf' } = req.body || {};
+    const { document, fields = {}, fileName = 'document.pdf', signatureMode = 'annotate' } =
+      req.body || {};
 
     if (!SUPERDOC_SERVICES_API_KEY) {
       return res.status(500).json({ error: 'Missing SUPERDOC_SERVICES_API_KEY on the server' });
@@ -95,7 +96,7 @@ app.post('/v1/download', async (req, res) => {
       return res.status(400).json({ error: 'document.url is required' });
     }
 
-    const annotatedFields = normalizeFields(fields);
+    const annotatedFields = normalizeFields(fields, signatureMode);
 
     const { base64, contentType } = await annotateDocument({
       documentUrl: document.url,
@@ -129,6 +130,7 @@ app.post('/v1/sign', async (req, res) => {
       certificate,
       metadata,
       fileName = 'signed-document.pdf',
+      signatureMode = 'sign',
     } = req.body || {};
 
     if (!SUPERDOC_SERVICES_API_KEY) {
@@ -139,10 +141,13 @@ app.post('/v1/sign', async (req, res) => {
       return res.status(400).json({ error: 'document.url is required' });
     }
 
-    const annotatedFields = normalizeFields({
-      document: documentFields,
-      signer: signerFields,
-    });
+    const annotatedFields = normalizeFields(
+      {
+        document: documentFields,
+        signer: signerFields,
+      },
+      signatureMode,
+    );
 
     const { base64: annotatedBase64 } = await annotateDocument({
       documentUrl: document.url,
@@ -207,6 +212,11 @@ app.post('/v1/sign', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Proxy server running on http://localhost:${PORT}`);
-});
+// Only start server if this file is run directly (not imported for testing)
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Proxy server running on http://localhost:${PORT}`);
+  });
+}
+
+export { app, normalizeFields };

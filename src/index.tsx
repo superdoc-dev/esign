@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import type { SuperDoc } from 'superdoc';
 import type * as Types from './types';
+import { textToImageDataUrl } from './utils/signature';
 import {
   SignatureInput,
   CheckboxInput,
@@ -9,6 +10,7 @@ import {
 } from './defaults';
 
 export * from './types';
+export { textToImageDataUrl };
 export { SignatureInput, CheckboxInput };
 
 type Editor = NonNullable<SuperDoc['activeEditor']>;
@@ -59,6 +61,47 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
 
       const signerField = fieldsRef.current.signer?.find((f) => f.id === field.id);
 
+      // Handle table fields
+      if (field.type === 'table' && Array.isArray(field.value)) {
+        const helpers = (editor.helpers as any)?.structuredContentCommands;
+        const tables = helpers?.getStructuredContentTablesById?.(field.id, editor.state) || [];
+
+        if (tables.length) {
+          const { node: tableNode, pos: tablePos } = tables[0];
+          const rowCount = tableNode.childCount;
+
+          // Delete all rows except the first one (template/header row) in a single transaction
+          if (rowCount > 1) {
+            let tr = editor.state.tr;
+
+            // Delete from bottom to top to ensure position mapping works correctly
+            for (let i = rowCount - 1; i >= 1; i--) {
+              let rowOffset = 1; // Start after table opening
+              for (let j = 0; j < i; j++) {
+                rowOffset += tableNode.child(j).nodeSize;
+              }
+
+              const rowNode = tableNode.child(i);
+              const rowStart = tablePos + rowOffset;
+              const rowEnd = rowStart + rowNode.nodeSize;
+
+              tr = tr.delete(tr.mapping.map(rowStart), tr.mapping.map(rowEnd));
+            }
+
+            editor.view?.dispatch(tr);
+          }
+
+          // Append new rows after row 0 (copies style from row 0)
+          (editor.commands as any)?.appendRowsToStructuredContentTable?.({
+            id: field.id,
+            rows: field.value,
+            copyRowStyle: true,
+          });
+        }
+
+        return;
+      }
+
       let updatePayload;
 
       if (signerField?.type === 'signature' && field.value) {
@@ -78,36 +121,9 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
       }
 
       if (field.id) {
-        editor.commands.updateStructuredContentById(field.id, updatePayload);
+        editor.commands?.updateStructuredContentById?.(field.id, updatePayload);
       }
     }, []);
-
-    function textToImageDataUrl(text: string): string {
-      const canvas = globalThis.document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
-
-      const fontSize = 30;
-      ctx.font = `italic ${fontSize}px cursive`;
-
-      const metrics = ctx.measureText(text);
-      const textWidth = metrics.width;
-
-      const estimatedHeight = fontSize * 1.3; // Cursive fonts typically need ~1.3x font size
-      const paddingX = 4;
-      const paddingY = 6; // Extra vertical padding for cursive descenders
-
-      canvas.width = Math.ceil(textWidth + paddingX * 2) + 20;
-      canvas.height = Math.ceil(estimatedHeight + paddingY * 2);
-
-      ctx.font = `italic ${fontSize}px cursive`;
-      ctx.fillStyle = 'black';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-
-      return canvas.toDataURL('image/png');
-    }
 
     const discoverAndApplyFields = useCallback(
       (editor: Editor) => {
@@ -117,7 +133,7 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
           editor.state,
         );
 
-        const configValues = new Map<string, Types.FieldValue>();
+        const configValues = new Map<string, Types.FieldValue | Types.TableFieldValue>();
 
         fieldsRef.current.document?.forEach((f) => {
           if (f.id) configValues.set(f.id, f.value);
@@ -140,12 +156,19 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
         if (discovered.length > 0) {
           onFieldsDiscoveredRef.current?.(discovered);
 
-          const allFields = [
-            ...(fieldsRef.current.document || []),
-            ...(fieldsRef.current.signer || []),
-          ];
+          // Apply document fields (with type for table support)
+          (fieldsRef.current.document || [])
+            .filter((field) => field.value !== undefined)
+            .forEach((field) =>
+              updateFieldInDocument({
+                id: field.id,
+                value: field.value,
+                type: field.type,
+              }),
+            );
 
-          allFields
+          // Apply signer fields
+          (fieldsRef.current.signer || [])
             .filter((field) => field.value !== undefined)
             .forEach((field) =>
               updateFieldInDocument({
@@ -194,6 +217,7 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
           modules: {
             comments: false,
           },
+          // @ts-expect-error - layoutMode is not supported in SuperDoc v1.1.0 yet
           layoutMode: document.layoutMode,
           layoutMargins: document.layoutMargins,
           onReady: () => {

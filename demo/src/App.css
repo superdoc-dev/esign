@@ -485,3 +485,59 @@ header {
 .superdoc-esign-actions {
     gap: 12px;
 }
+
+/* Main layout container */
+.main-layout-container {
+    display: flex;
+    gap: 24px;
+}
+
+/* Main content area */
+.main-content-area {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Right sidebar */
+.document-fields-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    padding: 16px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    align-self: flex-start;
+}
+
+.document-fields-sidebar h3 {
+    margin: 0 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.document-fields-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.document-field {
+    /* Individual field styles handled inline for now */
+}
+
+/* Responsive layout - stack vertically on small screens */
+@media (max-width: 768px) {
+    .main-layout-container {
+        flex-direction: column;
+    }
+
+    .document-fields-sidebar {
+        width: 100%;
+        order: 2; /* Move sidebar below the main content */
+    }
+
+    .main-content-area {
+        order: 1;
+    }
+}

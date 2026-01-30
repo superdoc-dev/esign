@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import SuperDocESign from '@superdoc-dev/esign';
+import SuperDocESign, { textToImageDataUrl } from '@superdoc-dev/esign';
 import type {
   SubmitData,
   SigningState,
@@ -14,7 +14,64 @@ import './App.css';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const documentSource =
-  'https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement_updated.docx';
+  'https://storage.googleapis.com/public_static_hosting/public_demo_docs/service_agreement_with_table.docx';
+
+// Document field definitions with labels
+interface DocumentFieldConfig {
+  id: string;
+  value: string | string[][];
+  type?: 'text' | 'table';
+  label?: string;
+  readOnly?: boolean;
+}
+
+const signerFieldsConfig = [
+  {
+    id: '789012',
+    type: 'signature' as const,
+    label: 'Your Signature',
+    validation: { required: true },
+    component: CustomSignature,
+  },
+  {
+    id: '1',
+    type: 'checkbox' as const,
+    label: 'I accept the terms and conditions',
+    validation: { required: true },
+  },
+  {
+    id: '2',
+    type: 'checkbox' as const,
+    label: 'Send me a copy of the agreement',
+    validation: { required: false },
+  },
+];
+
+const signatureFieldIds = new Set(
+  signerFieldsConfig.filter((field) => field.type === 'signature').map((field) => field.id),
+);
+
+const toSignatureImageValue = (value: SubmitData['signerFields'][number]['value']) => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string' && value.startsWith('data:image/')) return value;
+  return textToImageDataUrl(String(value));
+};
+
+const mapSignerFieldsWithType = (
+  fields: Array<{ id: string; value: SubmitData['signerFields'][number]['value'] }>,
+  signatureType: 'signature' | 'image',
+) =>
+  fields.map((field) => {
+    if (!signatureFieldIds.has(field.id)) {
+      return field;
+    }
+
+    return {
+      ...field,
+      type: signatureType,
+      value: toSignatureImageValue(field.value),
+    };
+  });
 
 // Helper to download a response blob as a file
 const downloadBlob = async (response: Response, fileName: string) => {
@@ -28,36 +85,43 @@ const downloadBlob = async (response: Response, fileName: string) => {
 };
 
 // Document field definitions with labels
-const documentFieldsConfig = [
+const documentFieldsConfig: DocumentFieldConfig[] = [
   {
     id: '123456',
     label: 'Date',
-    defaultValue: new Date().toLocaleDateString(),
+    value: new Date().toLocaleDateString(),
     readOnly: true,
-    type: 'text' as const,
+    type: 'text',
   },
   {
     id: '234567',
     label: 'Full Name',
-    defaultValue: 'John Doe',
+    value: 'John Doe',
     readOnly: false,
-    type: 'text' as const,
+    type: 'text',
   },
   {
     id: '345678',
     label: 'Company',
-    defaultValue: 'SuperDoc',
+    value: 'SuperDoc',
     readOnly: false,
-    type: 'text' as const,
+    type: 'text',
   },
-  { id: '456789', label: 'Plan', defaultValue: 'Premium', readOnly: false, type: 'text' as const },
-  { id: '567890', label: 'State', defaultValue: 'CA', readOnly: false, type: 'text' as const },
+  { id: '456789', label: 'Plan', value: 'Premium', readOnly: false, type: 'text' as const },
+  { id: '567890', label: 'State', value: 'CA', readOnly: false, type: 'text' as const },
   {
     id: '678901',
     label: 'Address',
-    defaultValue: '123 Main St, Anytown, USA',
+    value: '123 Main St, Anytown, USA',
     readOnly: false,
-    type: 'text' as const,
+    type: 'text',
+  },
+  {
+    id: '238312460',
+    label: 'User responsibilities',
+    value: [['  - Provide accurate and complete information']],
+    readOnly: false,
+    type: 'table',
   },
 ];
 
@@ -73,13 +137,20 @@ export function App() {
   const esignRef = useRef<SuperDocESignHandle>(null);
 
   // State for document field values
-  const [documentFields, setDocumentFields] = useState<Record<string, string>>(() =>
-    Object.fromEntries(documentFieldsConfig.map((f) => [f.id, f.defaultValue])),
+  const [documentFields, setDocumentFields] = useState<Record<string, string | string[][]>>(() =>
+    Object.fromEntries(documentFieldsConfig.map((f) => [f.id, f.value])),
   );
 
-  const updateDocumentField = (id: string, value: string) => {
+  const updateDocumentField = (id: string, value: string | string[][]) => {
+    const fieldConfig = documentFieldsConfig.find((f) => f.id === id);
     setDocumentFields((prev) => ({ ...prev, [id]: value }));
-    esignRef.current?.updateFieldInDocument({ id, value });
+    esignRef.current?.updateFieldInDocument({ id, value, type: fieldConfig?.type });
+  };
+
+  // Helper to get table rows as 2D array (for table fields)
+  const getTableRows = (fieldId: string): string[][] => {
+    const value = documentFields[fieldId];
+    return Array.isArray(value) ? value : [];
   };
 
   const log = (msg: string) => {
@@ -93,13 +164,15 @@ export function App() {
     console.log('Submit data:', data);
 
     try {
+      const signerFields = mapSignerFieldsWithType(data.signerFields, 'signature');
+
       const response = await fetch(`${API_BASE_URL}/v1/sign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           document: { url: documentSource },
           documentFields: data.documentFields,
-          signerFields: data.signerFields,
+          signerFields,
           auditTrail: data.auditTrail,
           eventId: data.eventId,
           certificate: { enable: true },
@@ -108,6 +181,7 @@ export function App() {
             plan: documentFields['456789'],
           },
           fileName: `signed_agreement_${data.eventId}.pdf`,
+          signatureMode: 'sign',
         }),
       });
 
@@ -134,13 +208,19 @@ export function App() {
         return;
       }
 
+      const signerFields = mapSignerFieldsWithType(data.fields.signer, 'image');
+
       const response = await fetch(`${API_BASE_URL}/v1/download`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           document: { url: data.documentSource },
-          fields: data.fields,
+          fields: {
+            ...data.fields,
+            signer: signerFields,
+          },
           fileName: data.fileName,
+          signatureMode: 'annotate',
         }),
       });
 
@@ -251,9 +331,9 @@ export function App() {
             Use the document toolbar to download the current agreement at any time.
           </p>
 
-          <div style={{ display: 'flex', gap: '24px' }}>
+          <div className="main-layout-container">
             {/* Main content */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="main-content-area">
               <SuperDocESign
                 ref={esignRef}
                 eventId={eventId}
@@ -272,27 +352,7 @@ export function App() {
                     value: documentFields[f.id],
                     type: f.type,
                   })),
-                  signer: [
-                    {
-                      id: '789012',
-                      type: 'signature',
-                      label: 'Your Signature',
-                      validation: { required: true },
-                      component: CustomSignature,
-                    },
-                    {
-                      id: 'terms',
-                      type: 'checkbox',
-                      label: 'I accept the terms and conditions',
-                      validation: { required: true },
-                    },
-                    {
-                      id: 'email',
-                      type: 'checkbox',
-                      label: 'Send me a copy of the agreement',
-                      validation: { required: false },
-                    },
-                  ],
+                  signer: signerFieldsConfig,
                 }}
                 download={{ label: 'Download PDF' }}
                 onSubmit={handleSubmit}
@@ -335,23 +395,9 @@ export function App() {
             </div>
 
             {/* Right Sidebar - Document Fields */}
-            <div
-              style={{
-                width: '280px',
-                flexShrink: 0,
-                padding: '16px',
-                background: '#f9fafb',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                alignSelf: 'flex-start',
-              }}
-            >
-              <h3
-                style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 600, color: '#374151' }}
-              >
-                Document Fields
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="document-fields-sidebar">
+              <h3>Document Fields</h3>
+              <div className="document-fields-list">
                 {documentFieldsConfig.map((field) => (
                   <div key={field.id}>
                     <label
@@ -363,25 +409,95 @@ export function App() {
                         marginBottom: '4px',
                       }}
                     >
-                      {field.label}
+                      {field.label}{' '}
+                      {field.type === 'table' && <span style={{ color: '#9ca3af' }}>(table)</span>}
                     </label>
-                    <input
-                      type="text"
-                      value={documentFields[field.id]}
-                      onChange={(e) => updateDocumentField(field.id, e.target.value)}
-                      readOnly={field.readOnly}
-                      style={{
-                        width: '100%',
-                        padding: '8px 10px',
-                        fontSize: '14px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '6px',
-                        background: field.readOnly ? '#f3f4f6' : 'white',
-                        color: field.readOnly ? '#6b7280' : '#111827',
-                        cursor: field.readOnly ? 'not-allowed' : 'text',
-                        boxSizing: 'border-box',
-                      }}
-                    />
+                    {field.type === 'table' ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {getTableRows(field.id).map((row, rowIndex) => (
+                          <div key={rowIndex} style={{ display: 'flex', gap: '4px' }}>
+                            {row.map((cellValue, cellIndex) => (
+                              <input
+                                key={cellIndex}
+                                type="text"
+                                value={cellValue}
+                                onChange={(e) => {
+                                  const rows = [...getTableRows(field.id)];
+                                  rows[rowIndex] = [...rows[rowIndex]];
+                                  rows[rowIndex][cellIndex] = e.target.value;
+                                  updateDocumentField(field.id, rows);
+                                }}
+                                style={{
+                                  flex: 1,
+                                  padding: '8px 10px',
+                                  fontSize: '14px',
+                                  border: '1px solid #d1d5db',
+                                  borderRadius: '6px',
+                                  boxSizing: 'border-box',
+                                }}
+                              />
+                            ))}
+                            <button
+                              onClick={() => {
+                                const rows = [...getTableRows(field.id)];
+                                if (rows.length > 1) {
+                                  rows.splice(rowIndex, 1);
+                                  updateDocumentField(field.id, rows);
+                                }
+                              }}
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '14px',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                background: '#f9fafb',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              -
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => {
+                            const rows = [...getTableRows(field.id)];
+                            // Add new row with same column count as first row
+                            const colCount = rows[0]?.length || 1;
+                            rows.push(Array(colCount).fill(''));
+                            updateDocumentField(field.id, rows);
+                          }}
+                          style={{
+                            padding: '6px 10px',
+                            fontSize: '13px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            background: '#f9fafb',
+                            cursor: 'pointer',
+                            alignSelf: 'flex-start',
+                          }}
+                        >
+                          + Add row
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={documentFields[field.id] as string}
+                        onChange={(e) => updateDocumentField(field.id, e.target.value)}
+                        readOnly={field.readOnly}
+                        style={{
+                          width: '100%',
+                          padding: '8px 10px',
+                          fontSize: '14px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          background: field.readOnly ? '#f3f4f6' : 'white',
+                          color: field.readOnly ? '#6b7280' : '#111827',
+                          cursor: field.readOnly ? 'not-allowed' : 'text',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
