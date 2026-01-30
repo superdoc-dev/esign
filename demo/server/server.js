@@ -39,7 +39,7 @@ const normalizeFields = (fieldsPayload = {}, signatureMode = 'annotate') => {
       const isSignatureField = field.id === SIGNATURE_FIELD_ID;
       const value = field.value ?? '';
       const signatureType = signatureMode === 'sign' ? 'signature' : 'image';
-      const type = isSignatureField ? signatureType : 'text';
+      const type = isSignatureField ? signatureType : (field.type || 'text');
 
       const normalized = { id: field.id, value, type };
       if (type === 'signature') {
@@ -212,6 +212,11 @@ app.post('/v1/sign', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Proxy server running on http://localhost:${PORT}`);
-});
+// Only start server if this file is run directly (not imported for testing)
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Proxy server running on http://localhost:${PORT}`);
+  });
+}
+
+export { app, normalizeFields };

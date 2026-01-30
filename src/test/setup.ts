@@ -32,16 +32,24 @@ vi.stubGlobal(
   },
 );
 
+const mockAppendRowsToStructuredContentTable = vi.fn();
+const mockGetStructuredContentTablesById = vi.fn(() => []);
+
 const mockEditor = {
   commands: {
     updateStructuredContentById: mockUpdateStructuredContentById,
+    appendRowsToStructuredContentTable: mockAppendRowsToStructuredContentTable,
   },
   helpers: {
     structuredContentCommands: {
       getStructuredContentTags: mockGetStructuredContentTags,
+      getStructuredContentTablesById: mockGetStructuredContentTablesById,
     },
   },
   state: {},
+  view: {
+    dispatch: vi.fn(),
+  },
 };
 
 const SuperDocMock = vi.fn((options: any = {}) => {
@@ -63,6 +71,9 @@ const SuperDocMock = vi.fn((options: any = {}) => {
 (SuperDocMock as any).mockEditor = mockEditor;
 (SuperDocMock as any).mockUpdateStructuredContentById = mockUpdateStructuredContentById;
 (SuperDocMock as any).mockGetStructuredContentTags = mockGetStructuredContentTags;
+(SuperDocMock as any).mockAppendRowsToStructuredContentTable =
+  mockAppendRowsToStructuredContentTable;
+(SuperDocMock as any).mockGetStructuredContentTablesById = mockGetStructuredContentTablesById;
 (SuperDocMock as any).mockDestroy = mockDestroy;
 (SuperDocMock as any).mockAuditEvents = auditEvents;
 (SuperDocMock as any).resetAuditEvents = resetAuditEvents;
