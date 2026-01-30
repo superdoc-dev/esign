@@ -11,7 +11,7 @@
         "@superdoc-dev/esign": "link:../.",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "superdoc": "1.6.1",
+        "superdoc": "1.9.0",
         "signature_pad": "^5.1.1"
     },
     "devDependencies": {

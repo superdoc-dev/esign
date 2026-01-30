@@ -75,8 +75,8 @@ importers:
         specifier: ^24.2.9
         version: 24.2.9(typescript@5.9.3)
       superdoc:
-        specifier: 1.5.0
-        version: 1.5.0(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.19))(yjs@13.6.19))(pdfjs-dist@4.6.82)(typescript@5.9.3)(y-prosemirror@1.3.7(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.5)(y-protocols@1.0.7(yjs@13.6.19))(yjs@13.6.19))(yjs@13.6.19)
+        specifier: 1.9.0
+        version: 1.9.0(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.19))(yjs@13.6.19))(pdfjs-dist@4.6.82)(typescript@5.9.3)(y-prosemirror@1.3.7(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.5)(y-protocols@1.0.7(yjs@13.6.19))(yjs@13.6.19))(yjs@13.6.19)
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -3495,8 +3495,8 @@ packages:
     resolution: {integrity: sha512-WHkws2ZflZe41zj6AolvvmaTrWds/VuyeYr9iPVv/oQeaIoVxMKaushfFWpOGDT+GuBrM/sVqF8KUCYQlSSTdQ==}
     engines: {node: '>=18'}
 
-  superdoc@1.5.0:
-    resolution: {integrity: sha512-MANY3qNy/KpLEpetRzMmfJW6jjiGBPqUqloeC+Fpxhe/7VvsckJj2Qx4PREiNq2BQkK/1UrXYhOVdoGPIrO/Bg==}
+  superdoc@1.9.0:
+    resolution: {integrity: sha512-ikcyoJRJe1QZSbcqLWQREMAJvkgKPw7jDsHoQIdpgtfFxaFqDqhGk7U6F68D8khHjsjbild6uvzaTa37B7RqGw==}
     peerDependencies:
       '@hocuspocus/provider': ^2.13.6
       pdfjs-dist: '>=4.3.136 <=4.6.82'
@@ -3529,6 +3529,7 @@ packages:
   tar@6.2.1:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
 
   temp-dir@3.0.0:
     resolution: {integrity: sha512-nHc6S/bwIilKHNRgK/3jlhDoIHcp45YgyiwcAk46Tr0LfEqGBVpmiAyuiuxeVE44m3mXnEeVhaipLOEWmH+Njw==}
@@ -7766,7 +7767,7 @@ snapshots:
       make-asynchronous: 1.0.1
       time-span: 5.1.0
 
-  superdoc@1.5.0(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.19))(yjs@13.6.19))(pdfjs-dist@4.6.82)(typescript@5.9.3)(y-prosemirror@1.3.7(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.5)(y-protocols@1.0.7(yjs@13.6.19))(yjs@13.6.19))(yjs@13.6.19):
+  superdoc@1.9.0(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.19))(yjs@13.6.19))(pdfjs-dist@4.6.82)(typescript@5.9.3)(y-prosemirror@1.3.7(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.5)(y-protocols@1.0.7(yjs@13.6.19))(yjs@13.6.19))(yjs@13.6.19):
     dependencies:
       '@hocuspocus/provider': 2.15.3(y-protocols@1.0.7(yjs@13.6.19))(yjs@13.6.19)
       buffer-crc32: 1.0.0

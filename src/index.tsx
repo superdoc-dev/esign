@@ -61,6 +61,47 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
 
       const signerField = fieldsRef.current.signer?.find((f) => f.id === field.id);
 
+      // Handle table fields
+      if (field.type === 'table' && Array.isArray(field.value)) {
+        const helpers = (editor.helpers as any)?.structuredContentCommands;
+        const tables = helpers?.getStructuredContentTablesById?.(field.id, editor.state) || [];
+
+        if (tables.length) {
+          const { node: tableNode, pos: tablePos } = tables[0];
+          const rowCount = tableNode.childCount;
+
+          // Delete all rows except the first one (template row) in a single transaction
+          if (rowCount > 1) {
+            let tr = editor.state.tr;
+
+            // Calculate all row positions first, then delete from bottom to top
+            // This ensures position mapping works correctly within the transaction
+            for (let i = rowCount - 1; i >= 1; i--) {
+              let rowOffset = 1; // Start after table opening
+              for (let j = 0; j < i; j++) {
+                rowOffset += tableNode.child(j).nodeSize;
+              }
+
+              const rowNode = tableNode.child(i);
+              const rowStart = tablePos + rowOffset;
+              const rowEnd = rowStart + rowNode.nodeSize;
+
+              tr = tr.delete(tr.mapping.map(rowStart), tr.mapping.map(rowEnd));
+            }
+
+            editor.view?.dispatch(tr);
+          }
+        }
+
+        // Append new rows (value is already string[][] - array of rows, each row is array of cells)
+        (editor.commands as any)?.appendRowsToStructuredContentTable?.({
+          id: field.id,
+          rows: field.value,
+          copyRowStyle: true,
+        });
+        return;
+      }
+
       let updatePayload;
 
       if (signerField?.type === 'signature' && field.value) {
@@ -92,7 +133,7 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
           editor.state,
         );
 
-        const configValues = new Map<string, Types.FieldValue>();
+        const configValues = new Map<string, Types.FieldValue | Types.TableFieldValue>();
 
         fieldsRef.current.document?.forEach((f) => {
           if (f.id) configValues.set(f.id, f.value);
@@ -115,12 +156,19 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
         if (discovered.length > 0) {
           onFieldsDiscoveredRef.current?.(discovered);
 
-          const allFields = [
-            ...(fieldsRef.current.document || []),
-            ...(fieldsRef.current.signer || []),
-          ];
+          // Apply document fields (with type for table support)
+          (fieldsRef.current.document || [])
+            .filter((field) => field.value !== undefined)
+            .forEach((field) =>
+              updateFieldInDocument({
+                id: field.id,
+                value: field.value,
+                type: field.type,
+              }),
+            );
 
-          allFields
+          // Apply signer fields
+          (fieldsRef.current.signer || [])
             .filter((field) => field.value !== undefined)
             .forEach((field) =>
               updateFieldInDocument({

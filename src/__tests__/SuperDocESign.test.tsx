@@ -88,6 +88,8 @@ type MockFn = ReturnType<typeof vi.fn>;
 type SuperDocMockType = typeof SuperDoc & {
   mockUpdateStructuredContentById: MockFn;
   mockGetStructuredContentTags: MockFn;
+  mockAppendRowsToStructuredContentTable: MockFn;
+  mockGetStructuredContentTablesById: MockFn;
   mockDestroy: MockFn;
 };
 
@@ -134,6 +136,9 @@ beforeEach(() => {
   superDocMock.mockGetStructuredContentTags.mockReset();
   superDocMock.mockGetStructuredContentTags.mockReturnValue([]);
   superDocMock.mockUpdateStructuredContentById.mockReset();
+  superDocMock.mockAppendRowsToStructuredContentTable.mockReset();
+  superDocMock.mockGetStructuredContentTablesById.mockReset();
+  superDocMock.mockGetStructuredContentTablesById.mockReturnValue([]);
   superDocMock.mockDestroy.mockReset();
   resetAuditEvents();
 });
@@ -496,5 +501,148 @@ describe('SuperDocESign component', () => {
     const auditTypes = submitData.auditTrail.map((event: AuditEvent) => event.type);
     expect(auditTypes).to.include.members(['ready', 'field_change']);
     expect(auditTypes).to.include('submit');
+  });
+
+  describe('table field support', () => {
+    const mockTableTag = (id: string) => ({
+      node: {
+        attrs: { id },
+        type: { name: 'structuredContentBlock' },
+        textContent: '',
+      },
+    });
+
+    it('calls appendRowsToStructuredContentTable for table type fields on initial load', async () => {
+      // Mock structured content tags to include the table field
+      superDocMock.mockGetStructuredContentTags.mockReturnValue([mockTableTag('table-1')]);
+
+      renderComponent({
+        fields: {
+          document: [
+            {
+              id: 'table-1',
+              type: 'table',
+              value: [['Row 1 Cell 1'], ['Row 2 Cell 1']],
+            },
+          ],
+        },
+      });
+
+      await waitForSuperDocReady();
+
+      await waitFor(() => {
+        expect(superDocMock.mockAppendRowsToStructuredContentTable).toHaveBeenCalledWith({
+          id: 'table-1',
+          rows: [['Row 1 Cell 1'], ['Row 2 Cell 1']],
+          copyRowStyle: true,
+        });
+      });
+    });
+
+    it('does not call appendRowsToStructuredContentTable for non-table fields', async () => {
+      // Mock structured content tags to include the text field
+      superDocMock.mockGetStructuredContentTags.mockReturnValue([mockTableTag('text-1')]);
+
+      renderComponent({
+        fields: {
+          document: [
+            {
+              id: 'text-1',
+              value: 'Simple text value',
+            },
+          ],
+        },
+      });
+
+      await waitForSuperDocReady();
+
+      await waitFor(() => {
+        expect(superDocMock.mockUpdateStructuredContentById).toHaveBeenCalledWith('text-1', {
+          text: 'Simple text value',
+        });
+      });
+
+      expect(superDocMock.mockAppendRowsToStructuredContentTable).not.toHaveBeenCalled();
+    });
+
+    it('updates table field via ref.updateFieldInDocument', async () => {
+      const ref = createRef<SuperDocESignHandle>();
+
+      superDocMock.mockGetStructuredContentTags.mockReturnValue([mockTableTag('table-2')]);
+
+      renderComponent(
+        {
+          fields: {
+            document: [
+              {
+                id: 'table-2',
+                type: 'table',
+                value: [['Initial']],
+              },
+            ],
+          },
+        },
+        { ref },
+      );
+
+      await waitForSuperDocReady();
+      await waitFor(() => expect(ref.current).toBeTruthy());
+
+      // Clear the mock to check the update call
+      superDocMock.mockAppendRowsToStructuredContentTable.mockClear();
+
+      act(() => {
+        ref.current?.updateFieldInDocument({
+          id: 'table-2',
+          type: 'table',
+          value: [['Updated Row 1'], ['Updated Row 2'], ['Updated Row 3']],
+        });
+      });
+
+      expect(superDocMock.mockAppendRowsToStructuredContentTable).toHaveBeenCalledWith({
+        id: 'table-2',
+        rows: [['Updated Row 1'], ['Updated Row 2'], ['Updated Row 3']],
+        copyRowStyle: true,
+      });
+    });
+
+    it('includes table fields in submit payload', async () => {
+      const onSubmit = vi.fn();
+
+      superDocMock.mockGetStructuredContentTags.mockReturnValue([
+        mockTableTag('table-3'),
+        mockTableTag('text-field'),
+      ]);
+
+      const { getByRole } = renderComponent({
+        onSubmit,
+        fields: {
+          document: [
+            {
+              id: 'table-3',
+              type: 'table',
+              value: [['Table Value 1'], ['Table Value 2']],
+            },
+            {
+              id: 'text-field',
+              value: 'Text Value',
+            },
+          ],
+        },
+      });
+
+      await waitForSuperDocReady();
+
+      const submitButton = getByRole('button', { name: /submit/i });
+      await userEvent.click(submitButton);
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+
+      const submitData = onSubmit.mock.calls[0][0];
+      expect(submitData.documentFields).toEqual([
+        { id: 'table-3', type: 'table', value: [['Table Value 1'], ['Table Value 2']] },
+        { id: 'text-field', value: 'Text Value' },
+      ]);
+    });
   });
 });
