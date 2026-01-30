@@ -217,7 +217,6 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
           modules: {
             comments: false,
           },
-          // @ts-expect-error - layoutMode is not supported in SuperDoc v1.1.0 yet
           layoutMode: document.layoutMode,
           layoutMargins: document.layoutMargins,
           onReady: () => {
