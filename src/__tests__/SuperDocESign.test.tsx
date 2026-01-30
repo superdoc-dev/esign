@@ -85,12 +85,19 @@ const configureScrollElement = (element: HTMLElement, initial: ScrollMetrics) =>
 };
 
 type MockFn = ReturnType<typeof vi.fn>;
+type MockEditor = {
+  commands: Record<string, MockFn>;
+  helpers: { structuredContentCommands: Record<string, MockFn> };
+  state: Record<string, unknown>;
+  view: { dispatch: MockFn };
+};
 type SuperDocMockType = typeof SuperDoc & {
   mockUpdateStructuredContentById: MockFn;
   mockGetStructuredContentTags: MockFn;
   mockAppendRowsToStructuredContentTable: MockFn;
   mockGetStructuredContentTablesById: MockFn;
   mockDestroy: MockFn;
+  mockEditor: MockEditor;
 };
 
 const superDocMock = SuperDoc as unknown as SuperDocMockType;
@@ -516,6 +523,12 @@ describe('SuperDocESign component', () => {
       // Mock structured content tags to include the table field
       superDocMock.mockGetStructuredContentTags.mockReturnValue([mockTableTag('table-1')]);
 
+      // Mock table exists in document (required for append to be called)
+      const mockTableNode = { childCount: 1, child: () => ({ nodeSize: 10 }) };
+      superDocMock.mockGetStructuredContentTablesById.mockReturnValue([
+        { node: mockTableNode, pos: 100 },
+      ]);
+
       renderComponent({
         fields: {
           document: [
@@ -570,6 +583,12 @@ describe('SuperDocESign component', () => {
 
       superDocMock.mockGetStructuredContentTags.mockReturnValue([mockTableTag('table-2')]);
 
+      // Mock table exists in document (required for append to be called)
+      const mockTableNode = { childCount: 1, child: () => ({ nodeSize: 10 }) };
+      superDocMock.mockGetStructuredContentTablesById.mockReturnValue([
+        { node: mockTableNode, pos: 100 },
+      ]);
+
       renderComponent(
         {
           fields: {
@@ -602,6 +621,79 @@ describe('SuperDocESign component', () => {
       expect(superDocMock.mockAppendRowsToStructuredContentTable).toHaveBeenCalledWith({
         id: 'table-2',
         rows: [['Updated Row 1'], ['Updated Row 2'], ['Updated Row 3']],
+        copyRowStyle: true,
+      });
+    });
+
+    it('deletes existing rows (except row 0) before appending new ones', async () => {
+      const ref = createRef<SuperDocESignHandle>();
+
+      superDocMock.mockGetStructuredContentTags.mockReturnValue([mockTableTag('table-delete')]);
+
+      // Mock a table with 3 existing rows (row 0 = header/template, rows 1-2 = data)
+      const mockTableNode = {
+        childCount: 3,
+        child: () => ({ nodeSize: 10 }), // Each row has size 10
+      };
+
+      superDocMock.mockGetStructuredContentTablesById.mockReturnValue([
+        { node: mockTableNode, pos: 100 },
+      ]);
+
+      // Mock the transaction
+      const mockMapping = { map: (pos: number) => pos };
+      const mockTr = {
+        mapping: mockMapping,
+        delete: vi.fn().mockReturnThis(),
+      };
+
+      // Get access to the mock editor to set up state.tr
+      const mockEditor = superDocMock.mockEditor;
+      mockEditor.state = { tr: mockTr };
+      mockEditor.view.dispatch = vi.fn();
+
+      renderComponent(
+        {
+          fields: {
+            document: [
+              {
+                id: 'table-delete',
+                type: 'table',
+                value: [['Initial']],
+              },
+            ],
+          },
+        },
+        { ref },
+      );
+
+      await waitForSuperDocReady();
+      await waitFor(() => expect(ref.current).toBeTruthy());
+
+      // Clear mocks before the update
+      mockTr.delete.mockClear();
+      mockEditor.view.dispatch.mockClear();
+      superDocMock.mockAppendRowsToStructuredContentTable.mockClear();
+
+      act(() => {
+        ref.current?.updateFieldInDocument({
+          id: 'table-delete',
+          type: 'table',
+          value: [['New Row 1'], ['New Row 2']],
+        });
+      });
+
+      // Should delete rows 2 and 1 (keeping row 0 as header/template)
+      expect(mockTr.delete).toHaveBeenCalledTimes(2);
+
+      // Should dispatch the transaction once
+      expect(mockEditor.view.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockEditor.view.dispatch).toHaveBeenCalledWith(mockTr);
+
+      // Should append new rows after row 0 with copyRowStyle
+      expect(superDocMock.mockAppendRowsToStructuredContentTable).toHaveBeenCalledWith({
+        id: 'table-delete',
+        rows: [['New Row 1'], ['New Row 2']],
         copyRowStyle: true,
       });
     });

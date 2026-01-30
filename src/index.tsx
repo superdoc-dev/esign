@@ -70,12 +70,11 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
           const { node: tableNode, pos: tablePos } = tables[0];
           const rowCount = tableNode.childCount;
 
-          // Delete all rows except the first one (template row) in a single transaction
+          // Delete all rows except the first one (template/header row) in a single transaction
           if (rowCount > 1) {
             let tr = editor.state.tr;
 
-            // Calculate all row positions first, then delete from bottom to top
-            // This ensures position mapping works correctly within the transaction
+            // Delete from bottom to top to ensure position mapping works correctly
             for (let i = rowCount - 1; i >= 1; i--) {
               let rowOffset = 1; // Start after table opening
               for (let j = 0; j < i; j++) {
@@ -91,14 +90,15 @@ const SuperDocESign = forwardRef<Types.SuperDocESignHandle, Types.SuperDocESignP
 
             editor.view?.dispatch(tr);
           }
+
+          // Append new rows after row 0 (copies style from row 0)
+          (editor.commands as any)?.appendRowsToStructuredContentTable?.({
+            id: field.id,
+            rows: field.value,
+            copyRowStyle: true,
+          });
         }
 
-        // Append new rows (value is already string[][] - array of rows, each row is array of cells)
-        (editor.commands as any)?.appendRowsToStructuredContentTable?.({
-          id: field.id,
-          rows: field.value,
-          copyRowStyle: true,
-        });
         return;
       }
 
